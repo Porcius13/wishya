@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Koleksiyonlarım - favit</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <!-- Stardos Stencil Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@400;700&display=swap');
+    </style>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #23395d;
+            --text-secondary: #203354;
+            --border-color: #1c2e4a;
+            --accent-color: #23395d;
+            --accent-hover: #203354;
+            --card-bg: #ffffff;
+            --shadow: rgba(35, 57, 93, 0.1);
+            --success-bg: #d4edda;
+            --success-text: #155724;
+            --error-bg: #f8d7da;
+            --error-text: #721c24;
+            --gradient-primary: linear-gradient(135deg, #23395d 0%, #203354 100%);
+            --gradient-secondary: linear-gradient(135deg, #1c2e4a 0%, #192841 100%);
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --glass-border: rgba(35, 57, 93, 0.2);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #152238;
+            --bg-secondary: #192841;
+            --text-primary: #ffffff;
+            --text-secondary: #e0e0e0;
+            --border-color: #1c2e4a;
+            --accent-color: #ffffff;
+            --accent-hover: #e0e0e0;
+            --card-bg: rgba(32, 51, 84, 0.9);
+            --shadow: rgba(0, 0, 0, 0.3);
+            --success-bg: #1e4d2b;
+            --success-text: #4ade80;
+            --error-bg: #4d1e1e;
+            --error-text: #f87171;
+            --gradient-primary: linear-gradient(135deg, #23395d 0%, #203354 100%);
+            --gradient-secondary: linear-gradient(135deg, #1c2e4a 0%, #152238 100%);
+            --glass-bg: rgba(32, 51, 84, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Subtle Background Animation */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--gradient-primary);
+            opacity: 0.02;
+            z-index: -1;
+            animation: gradientShift 30s ease-in-out infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.02) rotate(0.2deg); }
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 1000;
+            padding: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+        }
+
+        .logo {
+            font-family: 'Stardos Stencil', 'Courier New', monospace !important;
+            font-size: 26px;
+            font-weight: bold;
+            text-decoration: none;
+            color: var(--text-primary);
+            letter-spacing: 1.5px;
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+            transform: translateY(-1px);
+        }
+
+        .create-btn {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .create-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 30px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            max-width: 400px;
+            margin: 0 auto;
+            line-height: 1.4;
+        }
+
+        .collections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+
+        .collection-card {
+            background: var(--card-bg);
+            border: none;
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+            box-shadow: 0 4px 20px var(--shadow);
+            cursor: pointer;
+        }
+
+        .collection-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px var(--shadow);
+        }
+
+        .collection-header {
+            padding: 25px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--card-bg);
+        }
+
+        .collection-type {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .type-kombinler {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--accent-color);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .type-favoriler {
+            background: rgba(240, 147, 251, 0.1);
+            color: #f093fb;
+            border: 1px solid rgba(240, 147, 251, 0.2);
+        }
+
+        .collection-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .collection-description {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .collection-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .collection-count {
+            font-weight: 600;
+        }
+
+        .collection-date {
+            opacity: 0.8;
+        }
+
+        .collection-actions {
+            padding: 25px 30px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .view-btn {
+            flex: 1;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px var(--shadow);
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .view-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px var(--shadow);
+        }
+
+        .delete-btn {
+            background: #f8f8f8;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-btn:hover {
+            background: #f0f0f0;
+            transform: translateY(-1px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 120px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h3 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .empty-state p {
+            font-size: 18px;
+            margin-bottom: 40px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .create-first-btn {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .create-first-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .flash-messages {
+            margin-bottom: 40px;
+        }
+
+        .flash-message {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 500;
+            animation: slideInRight 0.5s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .flash-success {
+            background: rgba(212, 237, 218, 0.9);
+            color: var(--success-text);
+            border: 1px solid rgba(195, 230, 203, 0.5);
+        }
+
+        .flash-error {
+            background: rgba(248, 215, 218, 0.9);
+            color: var(--error-text);
+            border: 1px solid rgba(245, 198, 203, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 0 15px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .header-actions {
+                gap: 10px;
+            }
+
+            .nav-btn, .create-btn {
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+
+            .main-content {
+                padding: 40px 15px;
+            }
+
+            .collections-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .page-title {
+                font-size: 28px;
+            }
+
+            .page-subtitle {
+                font-size: 16px;
+            }
+
+            .collection-header {
+                padding: 20px;
+            }
+
+            .collection-actions {
+                padding: 15px 20px;
+            }
+
+            .collection-name {
+                font-size: 18px;
+            }
+
+            .collection-description {
+                font-size: 14px;
+            }
+
+            .collection-meta {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-content {
+                padding: 0 10px;
+            }
+
+            .header-actions {
+                gap: 8px;
+            }
+
+            .nav-btn, .create-btn {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+
+            .main-content {
+                padding: 30px 10px;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .page-subtitle {
+                font-size: 14px;
+            }
+
+            .collection-header {
+                padding: 15px;
+            }
+
+            .collection-actions {
+                padding: 12px 15px;
+            }
+
+            .collection-name {
+                font-size: 16px;
+            }
+
+            .collection-description {
+                font-size: 12px;
+            }
+
+            .collection-meta {
+                font-size: 11px;
+            }
+
+            .view-btn, .delete-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .header-content {
+                padding: 0 8px;
+            }
+
+            .header-actions {
+                gap: 6px;
+            }
+
+            .nav-btn, .create-btn {
+                padding: 5px 10px;
+                font-size: 10px;
+            }
+
+            .main-content {
+                padding: 25px 8px;
+            }
+
+            .page-title {
+                font-size: 20px;
+            }
+
+            .page-subtitle {
+                font-size: 12px;
+            }
+
+            .collection-header {
+                padding: 12px;
+            }
+
+            .collection-actions {
+                padding: 10px 12px;
+            }
+
+            .collection-name {
+                font-size: 14px;
+            }
+
+            .collection-description {
+                font-size: 11px;
+            }
+
+            .collection-meta {
+                font-size: 10px;
+            }
+
+                    .view-btn, .delete-btn {
+            padding: 6px 10px;
+            font-size: 11px;
+        }
+    }
+
+    /* Profile Dropdown Styles */
+    .profile-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .profile-btn {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 2px solid var(--glass-border);
+        padding: 12px 20px;
+        border-radius: 25px;
+        color: var(--text-primary);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 20px var(--shadow);
+    }
+
+    .profile-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px var(--shadow);
+        border-color: var(--accent-color);
+    }
+
+    .profile-icon {
+        font-size: 16px;
+    }
+
+    .profile-name {
+        font-weight: 600;
+    }
+
+    .dropdown-arrow {
+        font-size: 12px;
+        transition: transform 0.3s ease;
+    }
+
+    .profile-dropdown.active .dropdown-arrow {
+        transform: rotate(180deg);
+    }
+
+    .profile-dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 100%;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        min-width: 220px;
+        box-shadow: 0 20px 60px var(--shadow);
+        border-radius: 15px;
+        z-index: 1000;
+        margin-top: 10px;
+        border: 1px solid var(--glass-border);
+        overflow: hidden;
+    }
+
+    .profile-dropdown-content.show {
+        display: block;
+    }
+
+    .dropdown-item {
+        display: block;
+        width: 100%;
+        padding: 15px 20px;
+        border: none;
+        background: none;
+        text-align: left;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .dropdown-item:hover {
+        background: var(--gradient-primary);
+        color: white;
+    }
+
+    .dropdown-divider {
+        height: 1px;
+        background: var(--glass-border);
+        margin: 8px 0;
+    }
+
+    .logout-item {
+        color: #ff4757;
+    }
+
+    .logout-item:hover {
+        background: #ff4757;
+        color: white;
+    }
+</style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">favit</a>
+            <div class="header-actions">
+                <a href="/dashboard" class="nav-btn">Dashboard</a>
+                <a href="/collections/create" class="create-btn">+ Yeni Koleksiyon</a>
+                <div class="profile-dropdown">
+                    <button class="profile-btn" onclick="toggleProfileDropdown()">
+                        <span class="profile-icon">👤</span>
+                        <span class="profile-name">{{ current_user.username }}</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div class="profile-dropdown-content" id="profile-dropdown">
+                        <a href="/profile" class="dropdown-item">👤 Hesabım</a>
+                        <a href="/profile/settings" class="dropdown-item">⚙️ Hesap Bilgilerim</a>
+                        <a href="/profile/preferences" class="dropdown-item">🎨 Tercihlerim</a>
+                        <a href="/profile/collections" class="dropdown-item">📁 Koleksiyonlarım</a>
+                        <a href="/profile/favorites" class="dropdown-item">❤️ Favorilerim</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="/logout" class="dropdown-item logout-item">🚪 Çıkış Yap</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+            <h1 class="page-title">Koleksiyonlarım</h1>
+            <p class="page-subtitle">Favori ürünlerinizi organize edin ve paylaşın</p>
+        </div>
+
+        {% if collections %}
+            <div class="collections-grid">
+                {% for collection in collections %}
+                    <div class="collection-card">
+                        <div class="collection-header">
+                            <div class="collection-type type-{{ collection.type.lower() }}">
+                                {{ collection.type }}
+                            </div>
+                            <h3 class="collection-name">{{ collection.name }}</h3>
+                            {% if collection.description %}
+                                <p class="collection-description">{{ collection.description }}</p>
+                            {% endif %}
+                            <div class="collection-meta">
+                                <span class="collection-count">{{ collection.product_count }} ürün</span>
+                                <span class="collection-date">{{ collection.created_at[:10] if collection.created_at else 'N/A' }}</span>
+                            </div>
+                        </div>
+                        <div class="collection-actions">
+                            <a href="/collections/{{ collection.id }}" class="view-btn">Görüntüle</a>
+                            <form method="POST" action="/collections/{{ collection.id }}/delete" style="display: inline;">
+                                <button type="submit" class="delete-btn" onclick="return confirm('Bu koleksiyonu silmek istediğinizden emin misiniz?')">Sil</button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <h3>Henüz koleksiyon yok</h3>
+                <p>İlk koleksiyonunuzu oluşturarak favori ürünlerinizi organize etmeye başlayın</p>
+                <a href="/collections/create" class="create-first-btn">İlk Koleksiyonumu Oluştur</a>
+            </div>
+        {% endif %}
+    </main>
+
+    <script>
+        // Profile Dropdown Functionality
+        function toggleProfileDropdown() {
+            const dropdown = document.getElementById('profile-dropdown');
+            const profileDropdown = document.querySelector('.profile-dropdown');
+            
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                profileDropdown.classList.remove('active');
+            } else {
+                dropdown.classList.add('show');
+                profileDropdown.classList.add('active');
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const profileDropdown = document.querySelector('.profile-dropdown');
+            const dropdown = document.getElementById('profile-dropdown');
+            
+            if (!profileDropdown.contains(e.target)) {
+                dropdown.classList.remove('show');
+                profileDropdown.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html> 

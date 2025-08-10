@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: wishya-app
+    env: docker
+    plan: free
+    region: oregon
+    buildCommand: docker build -t wishya-app .
+    startCommand: docker run -p $PORT:8080 wishya-app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: false
+      - key: RENDER
+        value: true
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PLAYWRIGHT_BROWSERS_PATH
+        value: /ms-playwright
+      - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
+        value: false
+      - key: PYTHONUNBUFFERED
+        value: 1
+    autoDeploy: true
+    # Free plan optimizations
+    scaling:
+      minInstances: 0
+      maxInstances: 1
+    # Keep alive settings for free plan
+    healthCheckPath: /health
+    healthCheckTimeout: 180
+    healthCheckInterval: 30s
+
+databases:
+  - name: wishya-db
+    databaseName: wishya
+    user: wishya_user
+    plan: free
+    region: oregon

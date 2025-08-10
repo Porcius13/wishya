@@ -1,0 +1,10 @@
+[33md925e93[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m 🚀 Gelişmiş scraping sistemi eklendi - Akıllı görsel çekme, marka tespiti ve indirimli fiyat önceliği
+[33m479e775[m Fix WWF Market scraping issues: improve price extraction, title handling, and image selection
+[33m35d8b6f[m Remember me functionality added to login form and price tracking system improvements
+[33m2d1318b[m Zara tarzi urun kartlari ve yeni renk paleti - Zara tarzi minimalist urun kartlari - Favori ikonu eklendi - Yeni renk paleti: Cream, Tea Green, Pistachio, Dark Purple, Violet - Tum sayfalara yeni renk paleti uygulandi - Urun kartlari zarif ve sık tasarım
+[33m2c4a36c[m Fix: Veritabani sorunu cozuldu - Veritabani yeniden olusturuldu - Kayit sistemi test edildi - Email kontrolu calisiyor - Sifre kontrolu calisiyor
+[33m4b79f29[m 🎨 Pull&Bear tarzı koleksiyonlar sayfası - Minimalist beyaz tasarım - Temiz kartlar ve butonlar - Organik border-radius - Touch-friendly butonlar - Modern tipografi - Minimal gölgeler ve efektler
+[33mce9f60e[m 📱 Mobil uyumluluk iyileştirmeleri - Touch-friendly butonlar (44px min-height) - Responsive breakpoint'ler (768px, 480px, 360px) - Header flex-wrap ve gap optimizasyonları - Font boyutları mobil için optimize edildi - Touch-action manipulation eklendi - Webkit tap highlight kaldırıldı
+[33m83e1f05[m ✨ Yeni tasarım sistemi ve 5 yeni site desteği eklendi - Port 5006 - Koleksiyonlar sayfası minimal tasarım - Yeni scraping siteleri: catiuniform, mavi, ontrailstore, wwfmarket, superstep - Görsel URL düzeltmeleri - Tüm sayfalar yeni tasarım sistemi
+[33me370970[m Kayıt sistemi düzeltildi ve CSP hataları giderildi
+[33m9d7d96c[m Production deployment için hazırlık
