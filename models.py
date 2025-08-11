@@ -3,8 +3,49 @@ import uuid
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
+from typing import Any, Optional
 
 # Database configuration for Render
+# Lightweight wrappers to normalize parameter style between SQLite ('?') and psycopg2 ('%s')
+class PostgresCursorWrapper:
+    def __init__(self, inner_cursor):
+        self._cursor = inner_cursor
+
+    def execute(self, sql: str, params: Optional[tuple] = None):
+        # Convert sqlite style placeholders to psycopg2 style
+        sql_converted = sql.replace('?', '%s')
+        if params is None:
+            return self._cursor.execute(sql_converted)
+        return self._cursor.execute(sql_converted, params)
+
+    def fetchone(self):
+        return self._cursor.fetchone()
+
+    def fetchall(self):
+        return self._cursor.fetchall()
+
+    # Expose attributes that might be used implicitly
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._cursor, name)
+
+
+class PostgresConnectionWrapper:
+    def __init__(self, inner_connection):
+        self._conn = inner_connection
+
+    def cursor(self):
+        return PostgresCursorWrapper(self._conn.cursor())
+
+    def commit(self):
+        return self._conn.commit()
+
+    def close(self):
+        return self._conn.close()
+
+    # Expose attributes if needed
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._conn, name)
+
 def get_db_url():
     """Get database URL from environment variables"""
     if os.environ.get('DATABASE_URL'):
@@ -32,7 +73,8 @@ def get_db_connection():
             password=url.password,
             port=url.port or 5432
         )
-        return conn
+        # Return wrapper to normalize paramstyle
+        return PostgresConnectionWrapper(conn)
     else:
         # Use SQLite for local development
         import sqlite3
@@ -70,6 +112,11 @@ def init_db():
                 url TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
+        ''')
+        
+        # Ensure old_price column exists for compatibility with inserts
+        cursor.execute('''
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS old_price TEXT
         ''')
         
         cursor.execute('''
@@ -205,6 +252,15 @@ def init_db():
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         ''')
+        
+        # Ensure old_price column exists on SQLite as well
+        try:
+            cursor.execute('PRAGMA table_info(products)')
+            cols = [row[1] for row in cursor.fetchall()]
+            if 'old_price' not in cols:
+                cursor.execute('ALTER TABLE products ADD COLUMN old_price TEXT')
+        except Exception:
+            pass
         
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS collections (
