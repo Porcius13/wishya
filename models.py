@@ -4,32 +4,53 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 import os
-import psycopg2
-from psycopg2.extras import RealDictCursor
+
+# PostgreSQL için opsiyonel import
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+    PSYCOPG2_AVAILABLE = True
+except ImportError:
+    PSYCOPG2_AVAILABLE = False
+    print("[UYARI] psycopg2 modülü bulunamadı, PostgreSQL desteği devre dışı")
 
 def get_db_connection():
     """Database bağlantısı - Render PostgreSQL veya local SQLite"""
-    if os.environ.get('RENDER'):
+    if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE:
         # Render PostgreSQL
+        print(f"[DEBUG] Render ortamında PostgreSQL kullanılıyor")
         database_url = os.environ.get('DATABASE_URL')
+        print(f"[DEBUG] DATABASE_URL: {database_url[:20]}..." if database_url else "[DEBUG] DATABASE_URL yok")
+        
         if database_url and database_url.startswith('postgres://'):
             database_url = database_url.replace('postgres://', 'postgresql://', 1)
+            print(f"[DEBUG] URL güncellendi: {database_url[:20]}...")
         
         try:
+            print(f"[DEBUG] PostgreSQL bağlantısı kuruluyor...")
             conn = psycopg2.connect(database_url)
+            print(f"[DEBUG] PostgreSQL bağlantısı başarılı")
             return conn
         except Exception as e:
             print(f"[HATA] PostgreSQL bağlantı hatası: {e}")
+            print(f"[HATA] SQLite fallback kullanılıyor")
             # Fallback to SQLite
             return sqlite3.connect('wishya.db')
     else:
-        # Local SQLite
+        # Local SQLite veya PostgreSQL mevcut değilse
+        print(f"[DEBUG] Local ortamda SQLite kullanılıyor")
         return sqlite3.connect('wishya.db')
 
 def init_db():
     """Database tablolarını oluştur"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    try:
+        print(f"[DEBUG] init_db başladı, RENDER: {os.environ.get('RENDER')}")
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        print(f"[DEBUG] Database bağlantısı başarılı")
+    except Exception as e:
+        print(f"[HATA] Database bağlantı hatası: {e}")
+        raise
     
     if os.environ.get('RENDER'):
         # PostgreSQL için tablo oluşturma
@@ -195,24 +216,36 @@ def init_db():
     
     conn.commit()
     conn.close()
+    print(f"[DEBUG] Database tabloları başarıyla oluşturuldu")
 
 def get_placeholder():
     """Database placeholder'ını döndür (PostgreSQL: %s, SQLite: ?)"""
-    return '%s' if os.environ.get('RENDER') else '?'
+    return '%s' if (os.environ.get('RENDER') and PSYCOPG2_AVAILABLE) else '?'
 
 def execute_query(cursor, query, params=None):
     """Database query'sini çalıştır"""
     if params is None:
         params = ()
     
-    if os.environ.get('RENDER'):
-        # PostgreSQL için parametreleri tuple'a çevir
-        if isinstance(params, list):
-            params = tuple(params)
-        cursor.execute(query, params)
-    else:
-        # SQLite için parametreleri olduğu gibi kullan
-        cursor.execute(query, params)
+    try:
+        if os.environ.get('RENDER'):
+            # PostgreSQL için parametreleri tuple'a çevir
+            if isinstance(params, list):
+                params = tuple(params)
+            print(f"[DEBUG] PostgreSQL query: {query[:100]}...")
+            print(f"[DEBUG] PostgreSQL params: {params}")
+            cursor.execute(query, params)
+        else:
+            # SQLite için parametreleri olduğu gibi kullan
+            print(f"[DEBUG] SQLite query: {query[:100]}...")
+            print(f"[DEBUG] SQLite params: {params}")
+            cursor.execute(query, params)
+        print(f"[DEBUG] Query başarıyla çalıştırıldı")
+    except Exception as e:
+        print(f"[HATA] Query çalıştırma hatası: {e}")
+        print(f"[HATA] Query: {query}")
+        print(f"[HATA] Params: {params}")
+        raise
 
 def get_boolean_value(value):
     """Database için boolean değerini döndür"""
@@ -308,28 +341,50 @@ class User(UserMixin):
     def create(username, email, password):
         """Yeni kullanıcı oluştur"""
         try:
+            print(f"[DEBUG] Kullanıcı oluşturma başladı: {username}, {email}")
             user_id = str(uuid.uuid4())
             profile_url = f"user_{user_id[:8]}"
             password_hash = generate_password_hash(password)
             
+            print(f"[DEBUG] Database bağlantısı kuruluyor...")
             conn = get_db_connection()
             cursor = conn.cursor()
             
+            print(f"[DEBUG] Placeholder: {get_placeholder()}")
             placeholder = get_placeholder()
-            execute_query(cursor, f'''
+            
+            # Önce tabloyu kontrol et
+            try:
+                execute_query(cursor, "SELECT COUNT(*) FROM users")
+                print(f"[DEBUG] Users tablosu mevcut")
+            except Exception as table_error:
+                print(f"[HATA] Users tablosu bulunamadı: {table_error}")
+                # Tabloyu oluştur
+                init_db()
+                conn = get_db_connection()
+                cursor = conn.cursor()
+            
+            query = f'''
                 INSERT INTO users (id, username, email, password_hash, profile_url)
                 VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
-            ''', (user_id, username, email, password_hash, profile_url))
+            '''
+            print(f"[DEBUG] Query: {query}")
+            print(f"[DEBUG] Params: {user_id}, {username}, {email}, {password_hash}, {profile_url}")
             
+            execute_query(cursor, query, (user_id, username, email, password_hash, profile_url))
+            
+            print(f"[DEBUG] Commit yapılıyor...")
             conn.commit()
             conn.close()
             
+            print(f"[DEBUG] Kullanıcı başarıyla oluşturuldu")
             return User(user_id, username, email, password_hash, datetime.now(), profile_url)
         except Exception as e:
             print(f"[HATA] Kullanıcı oluşturma hatası: {e}")
+            print(f"[HATA] Hata türü: {type(e)}")
             if "UNIQUE constraint failed" in str(e) or "duplicate key value" in str(e):
                 raise Exception("Bu kullanıcı adı veya email zaten kullanılıyor")
-            raise Exception("Kullanıcı oluşturulamadı")
+            raise Exception(f"Kullanıcı oluşturulamadı: {str(e)}")
     
     def check_password(self, password):
         """Şifre kontrolü"""

@@ -2623,29 +2623,40 @@ def register():
             return render_template("register.html")
         
         try:
+            print(f"[DEBUG] Register işlemi başladı: {username}, {email}")
+            
             # Kullanıcı adı kontrolü
+            print(f"[DEBUG] Kullanıcı adı kontrolü yapılıyor...")
             if User.get_by_username(username):
                 flash("Bu kullanıcı adı zaten kullanılıyor", "error")
                 return render_template("register.html")
             
             # Email kontrolü
+            print(f"[DEBUG] Email kontrolü yapılıyor...")
             if User.get_by_email(email):
                 flash("Bu email adresi zaten kullanılıyor", "error")
                 return render_template("register.html")
             
             # Veritabanını başlat (eğer yoksa)
+            print(f"[DEBUG] Veritabanı başlatılıyor...")
             from models import init_db
             init_db()
             
+            print(f"[DEBUG] Kullanıcı oluşturuluyor...")
             user = User.create(username, email, password)
             if user:
+                print(f"[DEBUG] Kullanıcı başarıyla oluşturuldu, giriş yapılıyor...")
                 login_user(user)
                 flash("Hesabınız başarıyla oluşturuldu!", "success")
                 return redirect(url_for("dashboard"))
             else:
+                print(f"[HATA] User.create None döndürdü")
                 flash("Kayıt sırasında bir hata oluştu", "error")
         except Exception as e:
             print(f"[HATA] Kayıt hatası: {e}")
+            print(f"[HATA] Hata türü: {type(e)}")
+            import traceback
+            print(f"[HATA] Traceback: {traceback.format_exc()}")
             flash(f"Kayıt sırasında bir hata oluştu: {str(e)}", "error")
     
     return render_template("register.html")
