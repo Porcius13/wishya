@@ -4,7 +4,10 @@ services:
     env: docker
     plan: free
     region: oregon
-    buildCommand: docker build -t wishya-app .
+    buildCommand: |
+      docker build -t wishya-app .
+      docker run --rm wishya-app python -m playwright install chromium
+      docker run --rm wishya-app python -m playwright install-deps chromium
     startCommand: docker run -p $PORT:8080 wishya-app
     envVars:
       - key: PYTHON_VERSION

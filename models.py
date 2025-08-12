@@ -16,7 +16,8 @@ except ImportError:
 
 def get_db_connection():
     """Database bağlantısı - Render PostgreSQL veya local SQLite"""
-    if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE:
+    # Check if we're in Render environment and have DATABASE_URL
+    if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE and os.environ.get('DATABASE_URL'):
         # Render PostgreSQL
         print(f"[DEBUG] Render ortamında PostgreSQL kullanılıyor")
         database_url = os.environ.get('DATABASE_URL')
@@ -52,7 +53,7 @@ def init_db():
         print(f"[HATA] Database bağlantı hatası: {e}")
         raise
     
-    if os.environ.get('RENDER'):
+    if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE and os.environ.get('DATABASE_URL'):
         # PostgreSQL için tablo oluşturma
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
@@ -220,7 +221,7 @@ def init_db():
 
 def get_placeholder():
     """Database placeholder'ını döndür (PostgreSQL: %s, SQLite: ?)"""
-    # Gerçekten PostgreSQL kullanılıp kullanılmadığını kontrol et
+    # Check if we're actually using PostgreSQL
     if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE and os.environ.get('DATABASE_URL'):
         return '%s'  # PostgreSQL
     else:
@@ -232,7 +233,7 @@ def execute_query(cursor, query, params=None):
         params = ()
     
     try:
-        # Gerçekten PostgreSQL kullanılıp kullanılmadığını kontrol et
+        # Check if we're actually using PostgreSQL
         if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE and os.environ.get('DATABASE_URL'):
             # PostgreSQL için parametreleri tuple'a çevir
             if isinstance(params, list):
@@ -254,7 +255,7 @@ def execute_query(cursor, query, params=None):
 
 def get_boolean_value(value):
     """Database için boolean değerini döndür"""
-    if os.environ.get('RENDER'):
+    if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE and os.environ.get('DATABASE_URL'):
         # PostgreSQL için True/False
         return True if value else False
     else:
@@ -450,7 +451,7 @@ class Product:
         self.old_price = old_price
     
     @staticmethod
-    def create(user_id, name, price, image, brand, url):
+    def create(user_id, name, price, image, brand, url, old_price=None):
         """Yeni ürün oluştur"""
         try:
             product_id = str(uuid.uuid4())
@@ -463,12 +464,12 @@ class Product:
             execute_query(cursor, f'''
                 INSERT INTO products (id, user_id, name, price, image, brand, url, created_at, old_price)
                 VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
-            ''', (product_id, user_id, name, price, image, brand, url, created_at, None))
+            ''', (product_id, user_id, name, price, image, brand, url, created_at, old_price))
             
             conn.commit()
             conn.close()
             
-            return Product(product_id, user_id, name, price, image, brand, url, created_at, None)
+            return Product(product_id, user_id, name, price, image, brand, url, created_at, old_price)
         except Exception as e:
             print(f"[HATA] Ürün oluşturma hatası: {e}")
             return None
@@ -756,6 +757,28 @@ class PriceTracking:
             return []
     
     @staticmethod
+    def get_user_trackings_with_products(user_id):
+        """Kullanıcının fiyat takiplerini ürün bilgileriyle birlikte getir"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'''
+                SELECT pt.*, p.name, p.brand, p.image, p.old_price
+                FROM price_tracking pt
+                JOIN products p ON pt.product_id = p.id
+                WHERE pt.user_id = {placeholder}
+                ORDER BY pt.created_at DESC
+            ''', (user_id,))
+            trackings = cursor.fetchall()
+            conn.close()
+            
+            return trackings
+        except Exception as e:
+            print(f"[HATA] Kullanıcı fiyat takipleri (ürünlerle) getirme hatası: {e}")
+            return []
+    
+    @staticmethod
     def get_by_id(tracking_id):
         """ID ile fiyat takibi getir"""
         try:
@@ -844,7 +867,7 @@ class Notification:
             cursor = conn.cursor()
             placeholder = get_placeholder()
             
-            if os.environ.get('RENDER'):
+            if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE and os.environ.get('DATABASE_URL'):
                 # PostgreSQL için LIMIT syntax
                 execute_query(cursor, f'''
                     SELECT * FROM notifications 

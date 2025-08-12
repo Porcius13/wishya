@@ -79,6 +79,176 @@ BRANDS_FILE = "dynamic_brands.json"
 
 # Site-specific scraping configurations
 SITE_CONFIGS = {
+    "columbia.com.tr": {
+        "image_selectors": [
+            "img.product-image",
+            "img[class*='product'][class*='image']",
+            "img[class*='main'][class*='image']",
+            "img[class*='detail'][class*='image']",
+            "img[src*='columbia.com.tr']",
+            "img[src*='columbia']",
+            "img[alt*='product']",
+            "img[alt*='ürün']",
+            "img[alt*='Columbia']",
+            "img[title*='product']",
+            "img[title*='ürün']",
+            "img[title*='Columbia']",
+            "img[loading='lazy']",
+            "img[decoding='async']",
+            "img[data-nimg='1']",
+            "img[style*='color:transparent']",
+            "img[fetchpriority='high']",
+            "img[loading='eager']",
+            ".product-gallery img",
+            ".product-images img",
+            ".gallery img",
+            ".images img"
+        ],
+        "price_selectors": [
+            "span.price",
+            "span[class*='price']",
+            "div.price",
+            "div[class*='price']",
+            "p.price",
+            "p[class*='price']",
+            ".price-current",
+            ".current-price",
+            ".product-price",
+            "[class*='price'][class*='current']",
+            "[class*='current'][class*='price']",
+            "span[data-price]",
+            "div[data-price]",
+            ".price-value",
+            ".price-amount"
+        ],
+        "old_price_selectors": [
+            "span.old-price",
+            "span[class*='old'][class*='price']",
+            "div.old-price",
+            "div[class*='old'][class*='price']",
+            ".price-old",
+            ".old-price",
+            "[class*='price'][class*='old']",
+            "[class*='old'][class*='price']",
+            ".price-before",
+            ".before-price"
+        ],
+        "title_selectors": [
+            "h1.product-name",
+            "h1.product-title",
+            "h1[class*='product']",
+            ".product-name",
+            ".product-title",
+            "[class*='product'][class*='name']",
+            "[class*='product'][class*='title']",
+            "h1[data-product-name]",
+            "h1[data-product-title]"
+        ],
+        "size_selectors": [
+            "select[name*='size'] option",
+            "select[name*='beden'] option", 
+            "select[name*='numara'] option",
+            ".size-selector option",
+            ".beden-selector option",
+            ".numara-selector option",
+            "[data-size]",
+            "[data-beden]",
+            "[data-numara]",
+            ".size-option",
+            ".beden-option",
+            ".numara-option",
+            "input[name*='size'][type='radio']",
+            "input[name*='beden'][type='radio']",
+            "input[name*='numara'][type='radio']"
+        ]
+    },
+    "mudo.com.tr": {
+        "image_selectors": [
+            "img.product-image",
+            "img.product-main-image",
+            "img.main-product-image",
+            "img[class*='product'][class*='image']",
+            "img[class*='main'][class*='image']",
+            "img[class*='detail'][class*='image']",
+            "img[src*='mudo.com.tr']",
+            "img[src*='mudo']",
+            "img[alt*='product']",
+            "img[alt*='ürün']",
+            "img[alt*='Mudo']",
+            "img[title*='product']",
+            "img[title*='ürün']",
+            "img[title*='Mudo']",
+            "img[loading='lazy']",
+            "img[decoding='async']",
+            "img[data-nimg='1']",
+            "img[style*='color:transparent']",
+            "img[fetchpriority='high']",
+            "img[loading='eager']",
+            ".product-gallery img",
+            ".product-images img",
+            ".gallery img",
+            ".images img",
+            ".product-slider img",
+            ".product-carousel img"
+        ],
+        "price_selectors": [
+            "span.price",
+            "span[class*='price']",
+            "div.price",
+            "div[class*='price']",
+            "p.price",
+            "p[class*='price']",
+            ".price-current",
+            ".current-price",
+            ".product-price",
+            "[class*='price'][class*='current']",
+            "[class*='current'][class*='price']",
+            "span[data-price]",
+            "div[data-price]",
+            ".price-value",
+            ".price-amount"
+        ],
+        "old_price_selectors": [
+            "span.old-price",
+            "span[class*='old'][class*='price']",
+            "div.old-price",
+            "div[class*='old'][class*='price']",
+            ".price-old",
+            ".old-price",
+            "[class*='price'][class*='old']",
+            "[class*='old'][class*='price']",
+            ".price-before",
+            ".before-price"
+        ],
+        "title_selectors": [
+            "h1.product-name",
+            "h1.product-title",
+            "h1[class*='product']",
+            ".product-name",
+            ".product-title",
+            "[class*='product'][class*='name']",
+            "[class*='product'][class*='title']",
+            "h1[data-product-name]",
+            "h1[data-product-title]"
+        ],
+        "size_selectors": [
+            "select[name*='size'] option",
+            "select[name*='beden'] option", 
+            "select[name*='numara'] option",
+            ".size-selector option",
+            ".beden-selector option",
+            ".numara-selector option",
+            "[data-size]",
+            "[data-beden]",
+            "[data-numara]",
+            ".size-option",
+            ".beden-option",
+            ".numara-option",
+            "input[name*='size'][type='radio']",
+            "input[name*='beden'][type='radio']",
+            "input[name*='numara'][type='radio']"
+        ]
+    },
     "ltbjeans.com": {
         "image_selectors": [
             "img[src*='ltbjeans-hybris-p1.mncdn.com']",
@@ -1497,6 +1667,42 @@ def get_recent_errors():
         'total_errors': len(scraping_stats['error_log'])
     })
 
+@app.route("/api/debug/scrape", methods=['POST'])
+def debug_scrape():
+    """Debug için scraping test endpoint'i"""
+    try:
+        data = request.get_json()
+        url = data.get('url')
+        
+        if not url:
+            return jsonify({'error': 'URL gerekli'}), 400
+        
+        print(f"[DEBUG] Test scraping başlıyor: {url}")
+        
+        # Asenkron scraping'i çalıştır
+        import asyncio
+        result = asyncio.run(scrape_product(url))
+        
+        return jsonify({
+            'success': True,
+            'result': result,
+            'debug_info': {
+                'url': url,
+                'timestamp': datetime.now().isoformat()
+            }
+        })
+        
+    except Exception as e:
+        print(f"[DEBUG] Test scraping hatası: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'debug_info': {
+                'url': url if 'url' in locals() else None,
+                'timestamp': datetime.now().isoformat()
+            }
+        }), 500
+
 # Hata durumlarını düzeltme önerileri
 def get_error_suggestions(error_type, domain):
     """Hata türüne göre düzeltme önerileri"""
@@ -1612,7 +1818,7 @@ async def perform_scraping(url):
     
     try:
         async with async_playwright() as p:
-            # Browser'ı başlat - Production ayarları
+            # Browser'ı başlat - Render optimized ayarları
             browser = await p.chromium.launch(
                 headless=True,
                 args=[
@@ -1645,8 +1851,34 @@ async def perform_scraping(url):
                     '--disable-accelerated-2d-canvas',
                     '--no-first-run',
                     '--no-zygote',
-                    '--single-process',
                     '--disable-background-networking',
+                    # Render için ek optimizasyonlar
+                    '--disable-background-media-suspend',  # Arka plan medya askıya alma
+                    '--disable-background-timer-throttling',  # Arka plan zamanlayıcı kısıtlama
+                    '--disable-backgrounding-occluded-windows',  # Arka plan pencereleri
+                    '--disable-renderer-backgrounding',  # Renderer arka plan
+                    '--disable-features=TranslateUI',  # Çeviri UI'ı devre dışı bırak
+                    '--disable-ipc-flooding-protection',  # IPC taşma koruması
+                    '--disable-web-security',  # Web güvenliği
+                    '--disable-features=VizDisplayCompositor',  # VizDisplayCompositor
+                    '--disable-default-apps',  # Varsayılan uygulamalar
+                    '--disable-sync',  # Senkronizasyon
+                    '--disable-translate',  # Çeviri
+                    '--hide-scrollbars',  # Kaydırma çubuklarını gizle
+                    '--mute-audio',  # Sesi kapat
+                    '--no-default-browser-check',  # Varsayılan tarayıcı kontrolü
+                    '--no-pings',  # Ping'leri devre dışı bırak
+                    '--disable-prompt-on-repost',  # Yeniden gönderimde uyarı
+                    '--disable-hang-monitor',  # Asılma monitörü
+                    '--disable-client-side-phishing-detection',  # İstemci tarafı kimlik avı tespiti
+                    '--disable-component-update',  # Bileşen güncellemesi
+                    '--disable-domain-reliability',  # Alan adı güvenilirliği
+                    '--disable-features=AudioServiceOutOfProcess',  # Ses servisi
+                    '--disable-setuid-sandbox',  # Setuid sandbox
+                    '--disable-accelerated-2d-canvas',  # Hızlandırılmış 2D canvas
+                    '--no-first-run',  # İlk çalıştırma
+                    '--no-zygote',  # Zygote
+                    '--disable-background-networking',  # Arka plan ağ
                 ]
             )
             
@@ -1688,14 +1920,49 @@ async def perform_scraping(url):
                 # Ürün sayfasına git
                 await navigate_to_product_page(page, url)
                 
+                # Render'da daha uzun bekleme
+                print(f"[DEBUG] Sayfa yükleme tamamlandı, veri çekme başlıyor...")
+                await page.wait_for_timeout(5000)  # 5 saniye ek bekleme
+                
                 # Gelişmiş veri çekme
                 title, price, old_price, image, sizes = await extract_enhanced_data(page, url)
                 
-                print(f"[DEBUG] Çekilen başlık: {title}")
-                print(f"[DEBUG] Çekilen fiyat: {price}")
-                print(f"[DEBUG] Çekilen eski fiyat: {old_price}")
-                print(f"[DEBUG] Çekilen marka: {brand}")
-                print(f"[DEBUG] Çekilen görsel: {image}")
+                print(f"[DEBUG] ===== SCRAPING SONUÇLARI =====")
+                print(f"[DEBUG] URL: {url}")
+                print(f"[DEBUG] Başlık: {title}")
+                print(f"[DEBUG] Mevcut Fiyat: {price}")
+                print(f"[DEBUG] Eski Fiyat: {old_price}")
+                print(f"[DEBUG] Marka: {brand}")
+                print(f"[DEBUG] Görsel: {image}")
+                print(f"[DEBUG] ================================")
+                
+                # Fiyat karşılaştırması için ek debug
+                if price and old_price and price != "🤷" and old_price != "🤷":
+                    print(f"[DEBUG] Fiyat analizi: Mevcut={price}, Eski={old_price}")
+                    try:
+                        # Basit sayısal karşılaştırma
+                        price_clean = re.sub(r'[^\d,\.]', '', price)
+                        old_price_clean = re.sub(r'[^\d,\.]', '', old_price)
+                        
+                        if ',' in price_clean and '.' in price_clean:
+                            price_clean = price_clean.replace(',', '')
+                        elif ',' in price_clean:
+                            price_clean = price_clean.replace(',', '.')
+                            
+                        if ',' in old_price_clean and '.' in old_price_clean:
+                            old_price_clean = old_price_clean.replace(',', '')
+                        elif ',' in old_price_clean:
+                            old_price_clean = old_price_clean.replace(',', '.')
+                        
+                        price_num = float(price_clean)
+                        old_price_num = float(old_price_clean)
+                        
+                        if price_num > old_price_num:
+                            print(f"[DEBUG] ⚠️  Mevcut fiyat ({price_num}) eski fiyattan ({old_price_num}) büyük!")
+                        else:
+                            print(f"[DEBUG] ✅ Fiyatlar mantıklı: Mevcut ({price_num}) <= Eski ({old_price_num})")
+                    except:
+                        print(f"[DEBUG] Fiyat sayısal karşılaştırma yapılamadı")
                 
                 result = {
                     "id": str(uuid.uuid4()),
@@ -1805,14 +2072,74 @@ async def handle_site_specific_navigation(page, url):
             
             print(f"[DEBUG] Zara ana sayfası hazırlandı")
         elif "bershka.com" in url:
-            await page.goto("https://www.bershka.com/tr/", wait_until="domcontentloaded", timeout=15000)
-            await page.wait_for_timeout(3000)
+            print(f"[DEBUG] Bershka için gelişmiş bot koruması aşma başlıyor")
+            
+            # Bershka ana sayfasına git ve cookie'leri kabul et
+            await page.goto("https://www.bershka.com/tr/", wait_until="domcontentloaded", timeout=30000)
+            await page.wait_for_timeout(5000)
+            
+            # Cookie banner'ını kabul et (varsa)
+            try:
+                cookie_button = await page.query_selector('button[data-testid="cookie-banner-accept"], button:has-text("Kabul"), button:has-text("Accept"), button:has-text("OK"), button:has-text("Aceptar"), button:has-text("Aceitar"), button:has-text("Accept all"), button:has-text("Accept cookies")')
+                if cookie_button:
+                    await cookie_button.click()
+                    print(f"[DEBUG] Bershka cookie banner kabul edildi")
+                    await page.wait_for_timeout(3000)
+            except:
+                pass
+            
+            # Sayfada biraz gezin
+            await page.mouse.move(100, 100)
+            await page.wait_for_timeout(1000)
+            await page.mouse.move(200, 200)
+            await page.wait_for_timeout(1000)
+            
+            # Scroll yap
+            await page.evaluate("window.scrollTo(0, 500)")
+            await page.wait_for_timeout(2000)
+            await page.evaluate("window.scrollTo(0, 0)")
+            await page.wait_for_timeout(1000)
+            
+            # Ek insan benzeri davranışlar
+            await page.mouse.move(300, 300)
+            await page.wait_for_timeout(500)
+            await page.mouse.move(400, 400)
+            await page.wait_for_timeout(500)
+            
+            print(f"[DEBUG] Bershka ana sayfası hazırlandı")
         elif "boyner.com.tr" in url:
             await page.goto("https://www.boyner.com.tr/", wait_until="domcontentloaded", timeout=15000)
             await page.wait_for_timeout(3000)
         elif "pullandbear.com" in url:
-            await page.goto("https://www.pullandbear.com/tr/", wait_until="domcontentloaded", timeout=15000)
-            await page.wait_for_timeout(3000)
+            print(f"[DEBUG] Pull&Bear için gelişmiş bot koruması aşma başlıyor")
+            
+            # Pull&Bear ana sayfasına git
+            await page.goto("https://www.pullandbear.com/tr/", wait_until="domcontentloaded", timeout=30000)
+            await page.wait_for_timeout(5000)
+            
+            # Cookie banner'ını kabul et (varsa)
+            try:
+                cookie_button = await page.query_selector('button[data-testid="cookie-banner-accept"], button:has-text("Kabul"), button:has-text("Accept"), button:has-text("OK"), button:has-text("Aceptar"), button:has-text("Aceitar")')
+                if cookie_button:
+                    await cookie_button.click()
+                    print(f"[DEBUG] Pull&Bear cookie banner kabul edildi")
+                    await page.wait_for_timeout(3000)
+            except:
+                pass
+            
+            # Sayfada biraz gezin
+            await page.mouse.move(100, 100)
+            await page.wait_for_timeout(1000)
+            await page.mouse.move(200, 200)
+            await page.wait_for_timeout(1000)
+            
+            # Scroll yap
+            await page.evaluate("window.scrollTo(0, 500)")
+            await page.wait_for_timeout(2000)
+            await page.evaluate("window.scrollTo(0, 0)")
+            await page.wait_for_timeout(1000)
+            
+            print(f"[DEBUG] Pull&Bear ana sayfası hazırlandı")
         elif "lesbenjamins.com" in url:
             await page.goto("https://lesbenjamins.com/", wait_until="domcontentloaded", timeout=15000)
             await page.wait_for_timeout(3000)
@@ -1860,8 +2187,125 @@ async def handle_site_specific_navigation(page, url):
         pass
 
 async def navigate_to_product_page(page, url):
-    """Ürün sayfasına gitme işlemleri"""
-    if "mango.com" in url:
+    """Ürün sayfasına gitme işlemleri - Render optimized"""
+    print(f"[DEBUG] Ürün sayfasına gidiliyor: {url}")
+    
+    # Genel ürün sayfası yükleme (tüm siteler için)
+    try:
+        await page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        print(f"[DEBUG] Sayfa yüklendi, bekleniyor...")
+        await page.wait_for_timeout(3000)
+        
+        # Sayfanın tam yüklenmesini bekle
+        try:
+            await page.wait_for_load_state("networkidle", timeout=30000)
+            print(f"[DEBUG] Network idle durumu beklendi")
+        except:
+            print(f"[DEBUG] Network idle timeout, devam ediliyor")
+            pass
+        
+        # Genel scroll ve mouse hareketleri
+        await page.evaluate("window.scrollTo(0, 300)")
+        await page.wait_for_timeout(2000)
+        await page.evaluate("window.scrollTo(0, 600)")
+        await page.wait_for_timeout(2000)
+        await page.evaluate("window.scrollTo(0, 0)")
+        await page.wait_for_timeout(1000)
+        
+        print(f"[DEBUG] Genel sayfa hazırlığı tamamlandı")
+    except Exception as e:
+        print(f"[DEBUG] Genel sayfa yükleme hatası: {e}")
+    
+    # Site-specific işlemler
+    if "pullandbear.com" in url:
+        print(f"[DEBUG] Pull&Bear ürün sayfasına gidiliyor...")
+        
+        # Pull&Bear ürün sayfasına git
+        await page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        await page.wait_for_timeout(8000)  # Daha uzun bekleme
+        
+        # Sayfanın tam yüklenmesini bekle
+        try:
+            await page.wait_for_load_state("networkidle", timeout=30000)
+            print(f"[DEBUG] Pull&Bear network idle durumu beklendi")
+        except:
+            print(f"[DEBUG] Pull&Bear network idle timeout, devam ediliyor")
+            pass
+        
+        # Pull&Bear için ek insan benzeri davranışlar
+        await page.mouse.move(300, 300)
+        await page.wait_for_timeout(1000)
+        
+        # Sayfayı scroll et
+        await page.evaluate("window.scrollTo(0, 300)")
+        await page.wait_for_timeout(2000)
+        await page.evaluate("window.scrollTo(0, 600)")
+        await page.wait_for_timeout(2000)
+        await page.evaluate("window.scrollTo(0, 0)")
+        await page.wait_for_timeout(1000)
+        
+        # Mouse hareketleri
+        await page.mouse.move(400, 400)
+        await page.wait_for_timeout(500)
+        await page.mouse.move(500, 500)
+        await page.wait_for_timeout(500)
+        
+        # Görsel galerisini aktif et (varsa)
+        try:
+            gallery_button = await page.query_selector('[data-testid="gallery-button"], .gallery-button, .image-gallery button')
+            if gallery_button:
+                await gallery_button.click()
+                print(f"[DEBUG] Pull&Bear görsel galerisi aktif edildi")
+                await page.wait_for_timeout(3000)
+        except:
+            pass
+        
+        print(f"[DEBUG] Pull&Bear ürün sayfası hazırlandı")
+    elif "bershka.com" in url:
+        print(f"[DEBUG] Bershka ürün sayfasına gidiliyor...")
+        
+        # Bershka ürün sayfasına git
+        await page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        await page.wait_for_timeout(8000)  # Daha uzun bekleme
+        
+        # Sayfanın tam yüklenmesini bekle
+        try:
+            await page.wait_for_load_state("networkidle", timeout=30000)
+            print(f"[DEBUG] Bershka network idle durumu beklendi")
+        except:
+            print(f"[DEBUG] Bershka network idle timeout, devam ediliyor")
+            pass
+        
+        # Bershka için ek insan benzeri davranışlar
+        await page.mouse.move(300, 300)
+        await page.wait_for_timeout(1000)
+        
+        # Sayfayı scroll et
+        await page.evaluate("window.scrollTo(0, 300)")
+        await page.wait_for_timeout(2000)
+        await page.evaluate("window.scrollTo(0, 600)")
+        await page.wait_for_timeout(2000)
+        await page.evaluate("window.scrollTo(0, 0)")
+        await page.wait_for_timeout(1000)
+        
+        # Mouse hareketleri
+        await page.mouse.move(400, 400)
+        await page.wait_for_timeout(500)
+        await page.mouse.move(500, 500)
+        await page.wait_for_timeout(500)
+        
+        # Bershka için özel görsel galerisi aktif etme (varsa)
+        try:
+            gallery_button = await page.query_selector('.product-gallery button, .image-gallery button, .carousel button, [data-testid="gallery-button"]')
+            if gallery_button:
+                await gallery_button.click()
+                print(f"[DEBUG] Bershka görsel galerisi aktif edildi")
+                await page.wait_for_timeout(3000)
+        except:
+            pass
+        
+        print(f"[DEBUG] Bershka ürün sayfası hazırlandı")
+    elif "mango.com" in url:
         print(f"[DEBUG] Mango ürün sayfasına gidiliyor...")
         
         # Ürün sayfasına git
@@ -2025,6 +2469,10 @@ async def extract_sizes(page, url, enhanced_selectors):
     """Beden bilgilerini çekme işlemleri"""
     sizes = []
     
+    # Columbia.com.tr ve Mudo.com.tr için özel filtreleme
+    is_columbia = "columbia.com.tr" in url
+    is_mudo = "mudo.com.tr" in url
+    
     # Gelişmiş selector'ları kullan
     domain = extract_domain_from_url(url)
     if domain in enhanced_selectors and "size_selectors" in enhanced_selectors[domain]:
@@ -2054,11 +2502,39 @@ async def extract_sizes(page, url, enhanced_selectors):
                 if text:
                     # Beden bilgilerini temizle ve ekle
                     size_text = text.strip()
-                    if size_text and len(size_text) <= 10:  # Çok uzun metinleri filtrele
+                    
+                    # Columbia.com.tr ve Mudo.com.tr için özel filtreleme
+                    if is_columbia or is_mudo:
+                        # Menü öğelerini filtrele
+                        skip_words = [
+                            'e-posta', 'email', 'üye ol', 'register', 'login', 'giriş', 'üye olun',
+                            'montlar', 'ceketler', 'pantolonlar', 'elbiseler', 'ayakkabılar',
+                            'yeni sezon', 'new season', 'indirim', 'sale', 'kampanya',
+                            'kategoriler', 'categories', 'markalar', 'brands', 'yardım',
+                            'help', 'iletişim', 'contact', 'hakkında', 'about', 'gizlilik',
+                            'privacy', 'şartlar', 'terms', 'koşullar', 'conditions',
+                            'sepet', 'cart', 'favoriler', 'favorites', 'hesabım', 'account',
+                            'çıkış', 'logout', 'arama', 'search', 'menü', 'menu'
+                        ]
+                        
+                        # Skip words kontrolü
+                        if any(skip_word in size_text.lower() for skip_word in skip_words):
+                            continue
+                        
+                        # Çok uzun metinleri filtrele (Columbia ve Mudo için daha sıkı)
+                        if len(size_text) > 8:
+                            continue
+                    
+                    if size_text and len(size_text) <= 10:  # Genel uzunluk kontrolü
+                        # Beden formatları kontrolü
                         if any(size in size_text.upper() for size in ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '2XL', '3XL', '4XL']):
                             if size_text not in sizes:
                                 sizes.append(size_text)
                         elif any(size in size_text for size in ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48']):
+                            if size_text not in sizes:
+                                sizes.append(size_text)
+                        # Columbia için ek beden formatları
+                        elif is_columbia and any(size in size_text for size in ['36.5', '37.5', '38.5', '39.5', '40.5', '41.5', '42.5', '43.5', '44.5', '45.5']):
                             if size_text not in sizes:
                                 sizes.append(size_text)
             
@@ -2081,6 +2557,131 @@ async def extract_enhanced_data(page, url):
     # Gelişmiş selector'ları al
     enhanced_selectors = get_enhanced_selectors()
     
+    # Pull&Bear için özel selector'lar
+    if "pullandbear.com" in url:
+        enhanced_selectors["pullandbear.com"] = {
+            "title_selectors": [
+                'h1[data-testid="product-detail-name"]',
+                'h1.product-name',
+                'h1.title',
+                'h1',
+                '[data-testid="product-title"]',
+                '.product-title',
+                '.product-name'
+            ],
+            "price_selectors": [
+                '[data-testid="product-price"]',
+                '.product-price',
+                '.price',
+                '[data-testid="price"]',
+                '.current-price',
+                '.final-price'
+            ],
+            "image_selectors": [
+                # Pull&Bear özel görsel selector'ları
+                'img[data-testid="product-image"]',
+                'img[data-testid="product-detail-image"]',
+                'img.product-image',
+                'img.product-detail-image',
+                'img.main-image',
+                'img[class*="product"][class*="image"]',
+                'img[class*="main"][class*="image"]',
+                'img[class*="detail"][class*="image"]',
+                # Pull&Bear'ın özel class'ları
+                'img[class*="pdp"]',
+                'img[class*="gallery"]',
+                'img[class*="carousel"]',
+                'img[class*="slider"]',
+                # Genel selector'lar
+                'img[src*="product"]',
+                'img[src*="main"]',
+                'img[src*="detail"]',
+                'img[src*="image"]',
+                'img[src*="gallery"]',
+                'img[src*="pdp"]',
+                # Son çare
+                'img'
+            ],
+            "old_price_selectors": [
+                '[data-testid="product-old-price"]',
+                '.product-old-price',
+                '.old-price',
+                '.previous-price',
+                '.strike-price'
+            ],
+            "size_selectors": [
+                '[data-testid="size-selector"] button',
+                '.size-selector button',
+                '.size-option',
+                '.size-button',
+                'button[data-testid*="size"]'
+            ]
+        }
+    
+    # Bershka için özel selector'lar
+    if "bershka.com" in url:
+        enhanced_selectors["bershka.com"] = {
+            "title_selectors": [
+                'h1.product-name',
+                'h1.product-title',
+                'h1.title',
+                'h1',
+                '.product-name',
+                '.product-title',
+                '[data-testid="product-title"]',
+                '[data-testid="product-name"]'
+            ],
+            "price_selectors": [
+                '.product-price',
+                '.price',
+                '.current-price',
+                '.final-price',
+                '[data-testid="product-price"]',
+                '[data-testid="price"]',
+                '.product-price-current',
+                '.price-current'
+            ],
+            "image_selectors": [
+                # Bershka özel görsel selector'ları
+                'img.product-image',
+                'img.product-main-image',
+                'img.main-product-image',
+                'img[class*="product"][class*="image"]',
+                'img[class*="main"][class*="image"]',
+                'img[class*="detail"][class*="image"]',
+                # Bershka'ın özel class'ları
+                'img[class*="gallery"]',
+                'img[class*="carousel"]',
+                'img[class*="slider"]',
+                'img[class*="pdp"]',
+                # Genel selector'lar
+                'img[src*="product"]',
+                'img[src*="main"]',
+                'img[src*="detail"]',
+                'img[src*="image"]',
+                'img[src*="gallery"]',
+                'img[src*="pdp"]',
+                # Son çare
+                'img'
+            ],
+            "old_price_selectors": [
+                '.product-old-price',
+                '.old-price',
+                '.previous-price',
+                '.strike-price',
+                '.price-old',
+                '[data-testid="product-old-price"]'
+            ],
+            "size_selectors": [
+                '.size-selector button',
+                '.size-option',
+                '.size-button',
+                'button[data-testid*="size"]',
+                '.product-sizes button',
+                '.available-sizes button'
+            ]
+        }
+    
     # Site-specific konfigürasyonu al
     site_config = get_site_config(url)
     if site_config:
@@ -2100,6 +2701,9 @@ async def extract_enhanced_data(page, url):
     
     # Eski fiyat çekme
     old_price = await extract_old_price(page, url, enhanced_selectors, site_old_price)
+    
+    # Fiyatları karşılaştır ve doğrula
+    price, old_price = await compare_and_validate_prices(price, old_price)
     
     # Beden bilgilerini çekme
     sizes = await extract_sizes(page, url, enhanced_selectors)
@@ -2155,8 +2759,10 @@ async def extract_title(page, url, enhanced_selectors, site_title):
     return title
 
 async def extract_image(page, url, enhanced_selectors, site_image):
-    """Görsel çekme işlemleri"""
+    """Görsel çekme işlemleri - Render optimized"""
     image = None
+    
+    print(f"[DEBUG] Görsel çekme başlıyor: {url}")
     
     # Site-specific görsel varsa kullan
     if site_image:
@@ -2164,12 +2770,468 @@ async def extract_image(page, url, enhanced_selectors, site_image):
         print(f"[DEBUG] Site-specific görsel kullanıldı: {image}")
         return image
     
+    # Pull&Bear için özel görsel çekme
+    if "pullandbear.com" in url:
+        print(f"[DEBUG] Pull&Bear özel görsel çekme başlıyor")
+        
+        # Pull&Bear'ın özel görsel selector'ları
+        pullandbear_selectors = [
+            # Ana ürün görseli
+            'img[data-testid="product-image"]',
+            'img[data-testid="product-detail-image"]',
+            'img.product-image',
+            'img.product-detail-image',
+            'img.main-image',
+            # Galeri görselleri
+            'img[class*="gallery"]',
+            'img[class*="carousel"]',
+            'img[class*="slider"]',
+            'img[class*="pdp"]',
+            # Genel selector'lar
+            'img[src*="product"]',
+            'img[src*="main"]',
+            'img[src*="detail"]',
+            'img[src*="image"]',
+            'img[src*="gallery"]',
+            'img[src*="pdp"]',
+            # Tüm img elementleri
+            'img'
+        ]
+        
+        for selector in pullandbear_selectors:
+            try:
+                print(f"[DEBUG] Pull&Bear selector deneniyor: {selector}")
+                
+                # Sayfayı scroll et
+                await page.evaluate("window.scrollTo(0, 300)")
+                await page.wait_for_timeout(1000)
+                await page.evaluate("window.scrollTo(0, 600)")
+                await page.wait_for_timeout(1000)
+                
+                img_elements = await page.query_selector_all(selector)
+                print(f"[DEBUG] Pull&Bear {len(img_elements)} img elementi bulundu")
+                
+                for img in img_elements:
+                    try:
+                        src = await img.get_attribute('src')
+                        srcset = await img.get_attribute('srcset')
+                        alt = await img.get_attribute('alt') or ''
+                        
+                        print(f"[DEBUG] Pull&Bear element: src={src}, alt={alt}")
+                        
+                        # Ürün görseli kontrolü
+                        if src and any(ext in src.lower() for ext in ['.jpg', '.jpeg', '.webp', '.png', '.gif']):
+                            # Logo, icon gibi görselleri filtrele
+                            if not any(skip in src.lower() for skip in ['logo', 'icon', 'banner', 'header', 'footer', 'avatar', 'profile']):
+                                # Boyut kontrolü
+                                try:
+                                    size = await img.bounding_box()
+                                    if size and size['width'] > 100 and size['height'] > 100:
+                                        image = src
+                                        print(f"[DEBUG] Pull&Bear uygun görsel bulundu: {image}")
+                                        break
+                                except:
+                                    image = src
+                                    print(f"[DEBUG] Pull&Bear boyut kontrolü yapılamadı, görsel kabul edildi: {image}")
+                                    break
+                        
+                        # srcset kontrolü
+                        if srcset and not image:
+                            srcset_urls = srcset.split(',')
+                            for srcset_url in srcset_urls:
+                                url_part = srcset_url.strip().split(' ')[0]
+                                if any(ext in url_part.lower() for ext in ['.jpg', '.jpeg', '.webp', '.png', '.gif']):
+                                    if not any(skip in url_part.lower() for skip in ['logo', 'icon', 'banner']):
+                                        image = url_part
+                                        print(f"[DEBUG] Pull&Bear srcset'ten görsel bulundu: {image}")
+                                        break
+                        
+                        if image:
+                            break
+                            
+                    except Exception as e:
+                        print(f"[DEBUG] Pull&Bear element işlenirken hata: {e}")
+                        continue
+                
+                if image:
+                    break
+                    
+            except Exception as e:
+                print(f"[DEBUG] Pull&Bear selector {selector} hatası: {e}")
+                continue
+        
+        if image:
+            # Görsel URL'ini düzelt
+            if image.startswith('//'):
+                image = 'https:' + image
+            elif image.startswith('/'):
+                from urllib.parse import urlparse
+                parsed_url = urlparse(url)
+                image = f"{parsed_url.scheme}://{parsed_url.netloc}{image}"
+            elif not image.startswith('http'):
+                from urllib.parse import urljoin
+                image = urljoin(url, image)
+            
+            print(f"[DEBUG] Pull&Bear final görsel URL: {image}")
+            return image
+        else:
+            print(f"[DEBUG] Pull&Bear hiçbir görsel bulunamadı!")
+    
+    # Mudo.com.tr için özel görsel çekme
+    if "mudo.com.tr" in url:
+        print(f"[DEBUG] Mudo.com.tr özel görsel çekme başlıyor")
+        
+        # Mudo'nun özel görsel selector'ları
+        mudo_selectors = [
+            # Ana ürün görseli
+            'img.product-image',
+            'img.product-main-image',
+            'img.main-product-image',
+            'img[class*="product"][class*="image"]',
+            'img[class*="main"][class*="image"]',
+            'img[class*="detail"][class*="image"]',
+            # Galeri görselleri
+            'img[class*="gallery"]',
+            'img[class*="carousel"]',
+            'img[class*="slider"]',
+            'img[class*="pdp"]',
+            # Mudo özel selector'ları
+            'img[src*="mudo.com.tr"]',
+            'img[src*="mudo"]',
+            'img[alt*="Mudo"]',
+            'img[alt*="mudo"]',
+            'img[title*="Mudo"]',
+            'img[title*="mudo"]',
+            # Genel selector'lar
+            'img[src*="product"]',
+            'img[src*="main"]',
+            'img[src*="detail"]',
+            'img[src*="image"]',
+            'img[src*="gallery"]',
+            'img[src*="pdp"]',
+            # Tüm img elementleri
+            'img'
+        ]
+        
+        for selector in mudo_selectors:
+            try:
+                print(f"[DEBUG] Mudo selector deneniyor: {selector}")
+                
+                # Sayfayı scroll et
+                await page.evaluate("window.scrollTo(0, 300)")
+                await page.wait_for_timeout(1000)
+                await page.evaluate("window.scrollTo(0, 600)")
+                await page.wait_for_timeout(1000)
+                
+                img_elements = await page.query_selector_all(selector)
+                print(f"[DEBUG] Mudo {len(img_elements)} img elementi bulundu")
+                
+                for img in img_elements:
+                    try:
+                        src = await img.get_attribute('src')
+                        srcset = await img.get_attribute('srcset')
+                        alt = await img.get_attribute('alt') or ''
+                        
+                        print(f"[DEBUG] Mudo element: src={src}, alt={alt}")
+                        
+                        # Ürün görseli kontrolü
+                        if src and any(ext in src.lower() for ext in ['.jpg', '.jpeg', '.webp', '.png', '.gif']):
+                            # Logo, icon gibi görselleri filtrele
+                            if not any(skip in src.lower() for skip in ['logo', 'icon', 'banner', 'header', 'footer', 'avatar', 'profile']):
+                                # Boyut kontrolü
+                                try:
+                                    size = await img.bounding_box()
+                                    if size and size['width'] > 100 and size['height'] > 100:
+                                        image = src
+                                        print(f"[DEBUG] Mudo uygun görsel bulundu: {image}")
+                                        break
+                                except:
+                                    image = src
+                                    print(f"[DEBUG] Mudo boyut kontrolü yapılamadı, görsel kabul edildi: {image}")
+                                    break
+                        
+                        # srcset kontrolü
+                        if srcset and not image:
+                            srcset_urls = srcset.split(',')
+                            for srcset_url in srcset_urls:
+                                url_part = srcset_url.strip().split(' ')[0]
+                                if any(ext in url_part.lower() for ext in ['.jpg', '.jpeg', '.webp', '.png', '.gif']):
+                                    if not any(skip in url_part.lower() for skip in ['logo', 'icon', 'banner']):
+                                        image = url_part
+                                        print(f"[DEBUG] Mudo srcset'ten görsel bulundu: {image}")
+                                        break
+                        
+                        if image:
+                            break
+                            
+                    except Exception as e:
+                        print(f"[DEBUG] Mudo element işlenirken hata: {e}")
+                        continue
+                
+                if image:
+                    break
+                    
+            except Exception as e:
+                print(f"[DEBUG] Mudo selector {selector} hatası: {e}")
+                continue
+        
+        if image:
+            # Görsel URL'ini düzelt
+            if image.startswith('//'):
+                image = 'https:' + image
+            elif image.startswith('/'):
+                from urllib.parse import urlparse
+                parsed_url = urlparse(url)
+                image = f"{parsed_url.scheme}://{parsed_url.netloc}{image}"
+            elif not image.startswith('http'):
+                from urllib.parse import urljoin
+                image = urljoin(url, image)
+            
+            print(f"[DEBUG] Mudo final görsel URL: {image}")
+            return image
+        else:
+            print(f"[DEBUG] Mudo hiçbir görsel bulunamadı!")
+    
+    # Columbia.com.tr için özel görsel çekme
+    if "columbia.com.tr" in url:
+        print(f"[DEBUG] Columbia.com.tr özel görsel çekme başlıyor")
+        
+        # Columbia'nın özel görsel selector'ları
+        columbia_selectors = [
+            # Ana ürün görseli
+            'img.product-image',
+            'img.product-main-image',
+            'img.main-product-image',
+            'img[class*="product"][class*="image"]',
+            'img[class*="main"][class*="image"]',
+            'img[class*="detail"][class*="image"]',
+            # Galeri görselleri
+            'img[class*="gallery"]',
+            'img[class*="carousel"]',
+            'img[class*="slider"]',
+            'img[class*="pdp"]',
+            # Columbia özel selector'ları
+            'img[src*="columbia.com.tr"]',
+            'img[src*="columbia"]',
+            'img[alt*="Columbia"]',
+            'img[alt*="columbia"]',
+            'img[title*="Columbia"]',
+            'img[title*="columbia"]',
+            # Genel selector'lar
+            'img[src*="product"]',
+            'img[src*="main"]',
+            'img[src*="detail"]',
+            'img[src*="image"]',
+            'img[src*="gallery"]',
+            'img[src*="pdp"]',
+            # Tüm img elementleri
+            'img'
+        ]
+        
+        for selector in columbia_selectors:
+            try:
+                print(f"[DEBUG] Columbia selector deneniyor: {selector}")
+                
+                # Sayfayı scroll et
+                await page.evaluate("window.scrollTo(0, 300)")
+                await page.wait_for_timeout(1000)
+                await page.evaluate("window.scrollTo(0, 600)")
+                await page.wait_for_timeout(1000)
+                
+                img_elements = await page.query_selector_all(selector)
+                print(f"[DEBUG] Columbia {len(img_elements)} img elementi bulundu")
+                
+                for img in img_elements:
+                    try:
+                        src = await img.get_attribute('src')
+                        srcset = await img.get_attribute('srcset')
+                        alt = await img.get_attribute('alt') or ''
+                        
+                        print(f"[DEBUG] Columbia element: src={src}, alt={alt}")
+                        
+                        # Ürün görseli kontrolü
+                        if src and any(ext in src.lower() for ext in ['.jpg', '.jpeg', '.webp', '.png', '.gif']):
+                            # Logo, icon gibi görselleri filtrele
+                            if not any(skip in src.lower() for skip in ['logo', 'icon', 'banner', 'header', 'footer', 'avatar', 'profile']):
+                                # Boyut kontrolü
+                                try:
+                                    size = await img.bounding_box()
+                                    if size and size['width'] > 100 and size['height'] > 100:
+                                        image = src
+                                        print(f"[DEBUG] Columbia uygun görsel bulundu: {image}")
+                                        break
+                                except:
+                                    image = src
+                                    print(f"[DEBUG] Columbia boyut kontrolü yapılamadı, görsel kabul edildi: {image}")
+                                    break
+                        
+                        # srcset kontrolü
+                        if srcset and not image:
+                            srcset_urls = srcset.split(',')
+                            for srcset_url in srcset_urls:
+                                url_part = srcset_url.strip().split(' ')[0]
+                                if any(ext in url_part.lower() for ext in ['.jpg', '.jpeg', '.webp', '.png', '.gif']):
+                                    if not any(skip in url_part.lower() for skip in ['logo', 'icon', 'banner']):
+                                        image = url_part
+                                        print(f"[DEBUG] Columbia srcset'ten görsel bulundu: {image}")
+                                        break
+                        
+                        if image:
+                            break
+                            
+                    except Exception as e:
+                        print(f"[DEBUG] Columbia element işlenirken hata: {e}")
+                        continue
+                
+                if image:
+                    break
+                    
+            except Exception as e:
+                print(f"[DEBUG] Columbia selector {selector} hatası: {e}")
+                continue
+        
+        if image:
+            # Görsel URL'ini düzelt
+            if image.startswith('//'):
+                image = 'https:' + image
+            elif image.startswith('/'):
+                from urllib.parse import urlparse
+                parsed_url = urlparse(url)
+                image = f"{parsed_url.scheme}://{parsed_url.netloc}{image}"
+            elif not image.startswith('http'):
+                from urllib.parse import urljoin
+                image = urljoin(url, image)
+            
+            print(f"[DEBUG] Columbia final görsel URL: {image}")
+            return image
+        else:
+            print(f"[DEBUG] Columbia hiçbir görsel bulunamadı!")
+    
+    # Bershka için özel görsel çekme
+    if "bershka.com" in url:
+        print(f"[DEBUG] Bershka özel görsel çekme başlıyor")
+        
+        # Bershka'nın özel görsel selector'ları
+        bershka_selectors = [
+            # Ana ürün görseli
+            'img.product-image',
+            'img.product-main-image',
+            'img.main-product-image',
+            'img[class*="product"][class*="image"]',
+            'img[class*="main"][class*="image"]',
+            'img[class*="detail"][class*="image"]',
+            # Galeri görselleri
+            'img[class*="gallery"]',
+            'img[class*="carousel"]',
+            'img[class*="slider"]',
+            'img[class*="pdp"]',
+            # Genel selector'lar
+            'img[src*="product"]',
+            'img[src*="main"]',
+            'img[src*="detail"]',
+            'img[src*="image"]',
+            'img[src*="gallery"]',
+            'img[src*="pdp"]',
+            # Tüm img elementleri
+            'img'
+        ]
+        
+        for selector in bershka_selectors:
+            try:
+                print(f"[DEBUG] Bershka selector deneniyor: {selector}")
+                
+                # Sayfayı scroll et
+                await page.evaluate("window.scrollTo(0, 300)")
+                await page.wait_for_timeout(1000)
+                await page.evaluate("window.scrollTo(0, 600)")
+                await page.wait_for_timeout(1000)
+                
+                img_elements = await page.query_selector_all(selector)
+                print(f"[DEBUG] Bershka {len(img_elements)} img elementi bulundu")
+                
+                for img in img_elements:
+                    try:
+                        src = await img.get_attribute('src')
+                        srcset = await img.get_attribute('srcset')
+                        alt = await img.get_attribute('alt') or ''
+                        
+                        print(f"[DEBUG] Bershka element: src={src}, alt={alt}")
+                        
+                        # Ürün görseli kontrolü
+                        if src and any(ext in src.lower() for ext in ['.jpg', '.jpeg', '.webp', '.png', '.gif']):
+                            # Logo, icon gibi görselleri filtrele
+                            if not any(skip in src.lower() for skip in ['logo', 'icon', 'banner', 'header', 'footer', 'avatar', 'profile']):
+                                # Boyut kontrolü
+                                try:
+                                    size = await img.bounding_box()
+                                    if size and size['width'] > 100 and size['height'] > 100:
+                                        image = src
+                                        print(f"[DEBUG] Bershka uygun görsel bulundu: {image}")
+                                        break
+                                except:
+                                    image = src
+                                    print(f"[DEBUG] Bershka boyut kontrolü yapılamadı, görsel kabul edildi: {image}")
+                                    break
+                        
+                        # srcset kontrolü
+                        if srcset and not image:
+                            srcset_urls = srcset.split(',')
+                            for srcset_url in srcset_urls:
+                                url_part = srcset_url.strip().split(' ')[0]
+                                if any(ext in url_part.lower() for ext in ['.jpg', '.jpeg', '.webp', '.png', '.gif']):
+                                    if not any(skip in url_part.lower() for skip in ['logo', 'icon', 'banner']):
+                                        image = url_part
+                                        print(f"[DEBUG] Bershka srcset'ten görsel bulundu: {image}")
+                                        break
+                        
+                        if image:
+                            break
+                            
+                    except Exception as e:
+                        print(f"[DEBUG] Bershka element işlenirken hata: {e}")
+                        continue
+                
+                if image:
+                    break
+                    
+            except Exception as e:
+                print(f"[DEBUG] Bershka selector {selector} hatası: {e}")
+                continue
+        
+        if image:
+            # Görsel URL'ini düzelt
+            if image.startswith('//'):
+                image = 'https:' + image
+            elif image.startswith('/'):
+                from urllib.parse import urlparse
+                parsed_url = urlparse(url)
+                image = f"{parsed_url.scheme}://{parsed_url.netloc}{image}"
+            elif not image.startswith('http'):
+                from urllib.parse import urljoin
+                image = urljoin(url, image)
+            
+            print(f"[DEBUG] Bershka final görsel URL: {image}")
+            return image
+        else:
+            print(f"[DEBUG] Bershka hiçbir görsel bulunamadı!")
+    
+    # Render'da daha uzun bekleme
+    
+    # Render'da daha uzun bekleme
+    try:
+        await page.wait_for_timeout(3000)  # 3 saniye bekle
+        print(f"[DEBUG] Sayfa yükleme beklendi")
+    except:
+        pass
+    
     # Gelişmiş selector'ları kullan
     domain = extract_domain_from_url(url)
     if domain in enhanced_selectors:
         selectors = enhanced_selectors[domain]["image_selectors"]
+        print(f"[DEBUG] Domain-specific selector'lar kullanılıyor: {domain}")
     else:
         selectors = [
+            # Öncelikli selector'lar
             'img[data-testid="product-detail-image"]',
             'img[data-testid="product-image"]',
             'img.product-detail-image',
@@ -2181,47 +3243,79 @@ async def extract_image(page, url, enhanced_selectors, site_image):
             'img[alt*="ürün"]',
             'img[alt*="product"]',
             'img[alt*="main"]',
-            'img[alt*="detail"]'
+            'img[alt*="detail"]',
+            # Genel selector'lar
+            'img[src*="product"]',
+            'img[src*="main"]',
+            'img[src*="detail"]',
+            'img[src*="image"]',
+            # Tüm img elementleri (son çare)
+            'img'
         ]
+        print(f"[DEBUG] Genel selector'lar kullanılıyor")
     
-    for selector in selectors:
+    print(f"[DEBUG] Toplam {len(selectors)} selector deneniyor")
+    
+    for i, selector in enumerate(selectors):
         try:
+            print(f"[DEBUG] Selector {i+1}/{len(selectors)} deneniyor: {selector}")
+            
+            # Sayfayı scroll et (görsellerin yüklenmesi için)
+            await page.evaluate("window.scrollTo(0, 300)")
+            await page.wait_for_timeout(1000)
+            await page.evaluate("window.scrollTo(0, 600)")
+            await page.wait_for_timeout(1000)
+            
             img_elements = await page.query_selector_all(selector)
-            for img in img_elements:
-                src = await img.get_attribute('src')
-                srcset = await img.get_attribute('srcset')
-                alt = await img.get_attribute('alt') or ''
-                
-                # Ürün görseli olup olmadığını kontrol et
-                if src and any(ext in src.lower() for ext in ['.jpg', '.jpeg', '.webp', '.png']):
-                    # Logo, icon gibi küçük görselleri filtrele
-                    if not any(skip in src.lower() for skip in ['logo', 'icon', 'banner', 'header', 'footer']):
-                        # Boyut kontrolü (çok küçük görselleri filtrele)
-                        try:
-                            size = await img.bounding_box()
-                            if size and size['width'] > 100 and size['height'] > 100:
+            print(f"[DEBUG] {len(img_elements)} img elementi bulundu")
+            
+            for j, img in enumerate(img_elements):
+                try:
+                    src = await img.get_attribute('src')
+                    srcset = await img.get_attribute('srcset')
+                    alt = await img.get_attribute('alt') or ''
+                    
+                    print(f"[DEBUG] Element {j+1}: src={src}, alt={alt}")
+                    
+                    # Ürün görseli olup olmadığını kontrol et
+                    if src and any(ext in src.lower() for ext in ['.jpg', '.jpeg', '.webp', '.png', '.gif']):
+                        # Logo, icon gibi küçük görselleri filtrele
+                        if not any(skip in src.lower() for skip in ['logo', 'icon', 'banner', 'header', 'footer', 'avatar', 'profile']):
+                            # Boyut kontrolü (çok küçük görselleri filtrele)
+                            try:
+                                size = await img.bounding_box()
+                                if size and size['width'] > 100 and size['height'] > 100:
+                                    image = src
+                                    print(f"[DEBUG] Uygun görsel bulundu: {image}")
+                                    break
+                            except:
                                 image = src
+                                print(f"[DEBUG] Boyut kontrolü yapılamadı, görsel kabul edildi: {image}")
                                 break
-                        except:
-                            image = src
-                            break
-                
-                # srcset kontrolü
-                if srcset and not image:
-                    srcset_urls = srcset.split(',')
-                    for srcset_url in srcset_urls:
-                        url_part = srcset_url.strip().split(' ')[0]
-                        if any(ext in url_part.lower() for ext in ['.jpg', '.jpeg', '.webp', '.png']):
-                            if not any(skip in url_part.lower() for skip in ['logo', 'icon', 'banner']):
-                                image = url_part
-                                break
-                
-                if image:
-                    break
+                    
+                    # srcset kontrolü
+                    if srcset and not image:
+                        srcset_urls = srcset.split(',')
+                        for srcset_url in srcset_urls:
+                            url_part = srcset_url.strip().split(' ')[0]
+                            if any(ext in url_part.lower() for ext in ['.jpg', '.jpeg', '.webp', '.png', '.gif']):
+                                if not any(skip in url_part.lower() for skip in ['logo', 'icon', 'banner']):
+                                    image = url_part
+                                    print(f"[DEBUG] srcset'ten görsel bulundu: {image}")
+                                    break
+                    
+                    if image:
+                        break
+                        
+                except Exception as e:
+                    print(f"[DEBUG] Element {j+1} işlenirken hata: {e}")
+                    continue
             
             if image:
                 break
-        except:
+                
+        except Exception as e:
+            print(f"[DEBUG] Selector {selector} hatası: {e}")
             continue
     
     # Görsel URL'ini düzelt
@@ -2235,6 +3329,57 @@ async def extract_image(page, url, enhanced_selectors, site_image):
         elif not image.startswith('http'):
             from urllib.parse import urljoin
             image = urljoin(url, image)
+        
+        print(f"[DEBUG] Final görsel URL: {image}")
+    else:
+        print(f"[DEBUG] Hiçbir görsel bulunamadı! Alternatif yöntem deneniyor...")
+        
+        # Alternatif yöntem: Tüm görselleri topla ve en uygun olanını seç
+        try:
+            all_images = await page.evaluate("""
+                () => {
+                    const images = Array.from(document.querySelectorAll('img'));
+                    return images.map(img => ({
+                        src: img.src,
+                        alt: img.alt || '',
+                        width: img.naturalWidth || img.width,
+                        height: img.naturalHeight || img.height,
+                        className: img.className || '',
+                        id: img.id || ''
+                    })).filter(img => 
+                        img.src && 
+                        img.src.length > 0 &&
+                        !img.src.includes('logo') &&
+                        !img.src.includes('icon') &&
+                        !img.src.includes('banner') &&
+                        !img.src.includes('header') &&
+                        !img.src.includes('footer') &&
+                        !img.src.includes('avatar') &&
+                        !img.src.includes('profile')
+                    );
+                }
+            """)
+            
+            print(f"[DEBUG] Alternatif yöntemle {len(all_images)} görsel bulundu")
+            
+            # En büyük görseli seç
+            best_image = None
+            max_size = 0
+            
+            for img_info in all_images:
+                size = img_info.get('width', 0) * img_info.get('height', 0)
+                if size > max_size and size > 10000:  # En az 100x100 piksel
+                    max_size = size
+                    best_image = img_info.get('src')
+            
+            if best_image:
+                image = best_image
+                print(f"[DEBUG] Alternatif yöntemle görsel bulundu: {image}")
+            else:
+                print(f"[DEBUG] Alternatif yöntemle de görsel bulunamadı")
+                
+        except Exception as e:
+            print(f"[DEBUG] Alternatif görsel çekme hatası: {e}")
     
     return image
 
@@ -2253,7 +3398,9 @@ async def extract_price(page, url, enhanced_selectors, site_price):
     if domain in enhanced_selectors:
         selectors = enhanced_selectors[domain]["price_selectors"]
     else:
+        # Önce mevcut/indirimli fiyatları ara, sonra genel fiyatları
         selectors = [
+            # Öncelikli olarak mevcut/indirimli fiyat selector'ları
             '.price-current',
             '.sale-price',
             '.discount-price',
@@ -2262,11 +3409,17 @@ async def extract_price(page, url, enhanced_selectors, site_price):
             '.current-price',
             '.final-price',
             '.price-final',
+            '.price-now',
+            '.price-new',
             '[data-testid="current-price"]',
             '[data-testid="sale-price"]',
+            '[data-testid="final-price"]',
             '[class*="current"][class*="price"]',
             '[class*="sale"][class*="price"]',
             '[class*="discount"][class*="price"]',
+            '[class*="final"][class*="price"]',
+            '[class*="new"][class*="price"]',
+            # Sonra genel fiyat selector'ları
             '.product-price',
             '.price',
             'span.price',
@@ -2285,12 +3438,25 @@ async def extract_price(page, url, enhanced_selectors, site_price):
             for element in price_elements:
                 text = await element.text_content()
                 if text and ('₺' in text or 'TL' in text):
+                    # Eski fiyat selector'larını kontrol et - bunları atla
+                    element_class = await element.get_attribute('class') or ''
+                    element_id = await element.get_attribute('id') or ''
+                    element_style = await element.get_attribute('style') or ''
+                    
+                    # Eski fiyat göstergelerini kontrol et
+                    is_old_price = any(indicator in (element_class + element_id + element_style).lower() 
+                                     for indicator in ['old', 'original', 'before', 'previous', 'crossed', 'strikethrough', 'line-through'])
+                    
+                    if is_old_price:
+                        print(f"[DEBUG] Eski fiyat elementi atlandı: {text}")
+                        continue
+                    
                     # Fiyat regex'i
                     price_pattern = re.compile(r'([0-9]{1,3}(?:\.[0-9]{3})*,[0-9]{2}\s*(?:₺|TL)|[0-9]{1,3}(?:\.[0-9]{3})*\s*(?:₺|TL)|[0-9]+(?:\.[0-9]{2})?\s*(?:₺|TL))')
                     match = price_pattern.search(text)
                     if match:
                         price = match.group(1)
-                        print(f"[DEBUG] Fiyat bulundu: {price}")
+                        print(f"[DEBUG] Mevcut fiyat bulundu: {price} (selector: {selector})")
                         break
             if price:
                 break
@@ -2311,7 +3477,44 @@ async def extract_price(page, url, enhanced_selectors, site_price):
             print(f"[DEBUG] Page text content hatası: {e}")
             price = "🤷"
     
+    print(f"[DEBUG] Mevcut fiyat çekme sonucu: {price}")
     return price
+
+async def compare_and_validate_prices(current_price, old_price):
+    """Fiyatları karşılaştır ve doğrula"""
+    if not current_price or not old_price:
+        return current_price, old_price
+    
+    try:
+        # Fiyatları sayısal değerlere çevir
+        def extract_numeric_price(price_str):
+            if not price_str or price_str == "🤷":
+                return None
+            # Sadece sayıları ve nokta/virgülü al
+            clean_price = re.sub(r'[^\d,\.]', '', price_str)
+            if ',' in clean_price and '.' in clean_price:
+                # Hem virgül hem nokta varsa, virgülü binlik ayırıcı olarak kabul et
+                clean_price = clean_price.replace(',', '')
+            elif ',' in clean_price:
+                # Sadece virgül varsa, ondalık ayırıcı olarak kabul et
+                clean_price = clean_price.replace(',', '.')
+            return float(clean_price)
+        
+        current_num = extract_numeric_price(current_price)
+        old_num = extract_numeric_price(old_price)
+        
+        if current_num and old_num:
+            # Eğer mevcut fiyat eski fiyattan büyükse, muhtemelen yanlış
+            if current_num > old_num:
+                print(f"[DEBUG] Fiyat karşılaştırması: Mevcut fiyat ({current_price}) eski fiyattan ({old_price}) büyük, değiştiriliyor")
+                return old_price, current_price
+            else:
+                print(f"[DEBUG] Fiyat karşılaştırması: Mevcut fiyat ({current_price}) eski fiyattan ({old_price}) küçük, doğru")
+        
+    except Exception as e:
+        print(f"[DEBUG] Fiyat karşılaştırma hatası: {e}")
+    
+    return current_price, old_price
 
 async def extract_old_price(page, url, enhanced_selectors, site_old_price):
     """Eski fiyat çekme işlemleri"""
@@ -2404,6 +3607,7 @@ async def extract_old_price(page, url, enhanced_selectors, site_old_price):
         except:
             continue
     
+    print(f"[DEBUG] Eski fiyat çekme sonucu: {old_price}")
     return old_price
 
 @app.route("/")
@@ -2424,6 +3628,45 @@ def health_check():
         return jsonify({"status": "healthy", "database": "connected"}), 200
     except Exception as e:
         return jsonify({"status": "unhealthy", "error": str(e)}), 500
+
+@app.route("/test-scraping")
+def test_scraping():
+    """Test scraping endpoint for debugging"""
+    import asyncio
+    
+    # Test URL'leri
+    test_urls = [
+        "https://www2.hm.com/tr_tr/productpage.1234567.html",  # H&M örnek
+        "https://www.zara.com/tr/tr/example-product-p1234567.html",  # Zara örnek
+    ]
+    
+    results = []
+    
+    for url in test_urls:
+        try:
+            # Async scraping'i test et
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                result = loop.run_until_complete(scrape_product(url))
+                results.append({
+                    "url": url,
+                    "success": True,
+                    "data": result
+                })
+            finally:
+                loop.close()
+        except Exception as e:
+            results.append({
+                "url": url,
+                "success": False,
+                "error": str(e)
+            })
+    
+    return jsonify({
+        "test_results": results,
+        "message": "Test scraping completed"
+    })
 
 @app.route("/admin/brands")
 @login_required
@@ -2684,24 +3927,35 @@ def add_product():
             finally:
                 loop.close()
                 
-            if product_data:
-                # Hepsiburada için özel alan adları
-                name = product_data.get('title') or product_data.get('name', '')
-                price = product_data.get('current_price') or product_data.get('price', '')
-                image = product_data.get('image', '')
-                brand = product_data.get('brand', '')
-                
-                Product.create(
-                    current_user.id,
-                    name,
-                    price,
-                    image,
-                    brand,
-                    product_data['url']
-                )
-                flash(f"Ürün eklendi: {name}", "success")
-            else:
-                flash("Ürün verisi çekilemedi", "error")
+                if product_data:
+                    # Hepsiburada için özel alan adları
+                    name = product_data.get('title') or product_data.get('name', '')
+                    price = product_data.get('current_price') or product_data.get('price', '')
+                    old_price = product_data.get('old_price')
+                    image = product_data.get('image', '')
+                    brand = product_data.get('brand', '')
+                    
+                    print(f"[DEBUG] ===== ÜRÜN EKLEME =====")
+                    print(f"[DEBUG] Name: {name}")
+                    print(f"[DEBUG] Price: {price}")
+                    print(f"[DEBUG] Old Price: {old_price}")
+                    print(f"[DEBUG] Image: {image}")
+                    print(f"[DEBUG] Brand: {brand}")
+                    print(f"[DEBUG] URL: {product_data['url']}")
+                    print(f"[DEBUG] ========================")
+                    
+                    Product.create(
+                        current_user.id,
+                        name,
+                        price,
+                        image,
+                        brand,
+                        product_data['url'],
+                        old_price
+                    )
+                    flash(f"Ürün eklendi: {name}", "success")
+                else:
+                    flash("Ürün verisi çekilemedi", "error")
         except Exception as e:
             flash("Ürün eklenirken hata oluştu", "error")
             print(f"[HATA] Ürün eklenirken hata: {e}")
@@ -2724,8 +3978,18 @@ def add_product():
                 if product_data:
                     name = product_data.get('title') or product_data.get('name', '')
                     price = product_data.get('current_price') or product_data.get('price', '')
+                    old_price = product_data.get('old_price')
                     image = product_data.get('image', '')
                     brand = product_data.get('brand', '')
+                    
+                    print(f"[DEBUG] ===== TOPLU ÜRÜN EKLEME =====")
+                    print(f"[DEBUG] URL: {url}")
+                    print(f"[DEBUG] Name: {name}")
+                    print(f"[DEBUG] Price: {price}")
+                    print(f"[DEBUG] Old Price: {old_price}")
+                    print(f"[DEBUG] Image: {image}")
+                    print(f"[DEBUG] Brand: {brand}")
+                    print(f"[DEBUG] ==============================")
                     
                     Product.create(
                         current_user.id,
@@ -2733,7 +3997,8 @@ def add_product():
                         price,
                         image,
                         brand,
-                        product_data['url']
+                        product_data['url'],
+                        old_price
                     )
                     added_count += 1
             except Exception as e:
@@ -2854,13 +4119,13 @@ def price_tracking():
     """Fiyat takip ana sayfası"""
     from models import PriceTracking
     
-    # Kullanıcının fiyat takiplerini getir
-    tracking_items = PriceTracking.get_user_trackings(current_user.id)
+    # Kullanıcının fiyat takiplerini getir (ürün bilgileriyle birlikte)
+    tracking_items = PriceTracking.get_user_trackings_with_products(current_user.id)
     
     # İstatistikleri hesapla
     tracking_stats = {
         'total_products': len(tracking_items),
-        'active_alerts': sum(1 for item in tracking_items if item.alert_price),
+        'active_alerts': sum(1 for item in tracking_items if item[7]),  # alert_price
         'price_drops': 0,  # Bu özellik henüz implement edilmedi
         'total_savings': 0  # Bu özellik henüz implement edilmedi
     }
