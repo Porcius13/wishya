@@ -1,6 +1,6 @@
 # Cache bust: 2025-01-15-02-00 - Render Free Plan Optimized
 flask==2.3.3
-playwright==1.40.0
+playwright==1.39.0
 requests==2.31.0
 beautifulsoup4==4.12.2
 gunicorn==21.2.0

@@ -40,11 +40,24 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Playwright browsers (only Chromium for production)
-RUN playwright install chromium --with-deps
+# Set environment variables for Playwright
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=false
+
+# Install Playwright browsers with explicit path and verification
+RUN playwright install chromium --with-deps && \
+    playwright install-deps chromium && \
+    ls -la /ms-playwright/ && \
+    ls -la /ms-playwright/chromium-*/ && \
+    test -f /ms-playwright/chromium-*/chrome-linux/chrome && \
+    echo "Playwright browsers installed successfully" && \
+    echo "Chrome executable found at: $(find /ms-playwright -name chrome -type f)"
 
 # Copy application code
 COPY . .
+
+# Verify Playwright installation
+RUN python check_playwright.py
 
 # Create necessary directories
 RUN mkdir -p /app/logs
@@ -54,9 +67,7 @@ ENV PYTHONPATH=/app
 ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 ENV RENDER=true
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 ENV PYTHONUNBUFFERED=1
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=false
 
 # Create non-root user for security
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
