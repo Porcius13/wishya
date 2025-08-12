@@ -220,7 +220,8 @@ def init_db():
 
 def get_placeholder():
     """Database placeholder'ını döndür (PostgreSQL: %s, SQLite: ?)"""
-    if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE:
+    # Gerçekten PostgreSQL kullanılıp kullanılmadığını kontrol et
+    if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE and os.environ.get('DATABASE_URL'):
         return '%s'  # PostgreSQL
     else:
         return '?'   # SQLite
@@ -231,7 +232,8 @@ def execute_query(cursor, query, params=None):
         params = ()
     
     try:
-        if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE:
+        # Gerçekten PostgreSQL kullanılıp kullanılmadığını kontrol et
+        if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE and os.environ.get('DATABASE_URL'):
             # PostgreSQL için parametreleri tuple'a çevir
             if isinstance(params, list):
                 params = tuple(params)
