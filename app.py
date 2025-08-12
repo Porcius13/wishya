@@ -181,7 +181,7 @@ SITE_CONFIGS = {
             "img[class*='product'][class*='image']",
             "img[data-testid='product-image']",
             "img[alt*='product']",
-            "img[alt*='ürün"]"
+            "img[alt*='ürün']"
         ],
         "price_selectors": [
             "span[data-testid='price']",
