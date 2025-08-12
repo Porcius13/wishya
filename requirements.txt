@@ -1,4 +1,4 @@
-# Cache bust: 2025-01-15-01-00 - Render Free Plan Optimized
+# Cache bust: 2025-01-15-02-00 - Render Free Plan Optimized
 flask==2.3.3
 playwright==1.40.0
 requests==2.31.0
@@ -13,3 +13,5 @@ python-dotenv==1.0.0
 psycopg2-binary==2.9.7
 # Memory optimization for free plan
 psutil==5.9.6
+# Additional dependencies for Render
+asyncio-mqtt==0.16.1

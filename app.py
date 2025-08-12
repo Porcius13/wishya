@@ -35,7 +35,7 @@ import time
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
-from models import init_db, User, Product, Collection
+from models import init_db, User, Product, Collection, PriceTracking, Notification, get_db_connection
 
 try:
     from dotenv import load_dotenv
@@ -50,6 +50,16 @@ app.secret_key = os.environ.get('SECRET_KEY', 'favit-secret-key-2025')
 # Render Free Plan Optimizations
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000  # 1 year cache
+
+# Database configuration for Render
+if os.environ.get('RENDER'):
+    # Render PostgreSQL configuration
+    app.config['DATABASE_URL'] = os.environ.get('DATABASE_URL')
+    if app.config['DATABASE_URL'] and app.config['DATABASE_URL'].startswith('postgres://'):
+        app.config['DATABASE_URL'] = app.config['DATABASE_URL'].replace('postgres://', 'postgresql://', 1)
+else:
+    # Local SQLite configuration
+    app.config['DATABASE_URL'] = 'sqlite:///wishya.db'
 
 # Simple cache for scraping results (memory optimized for free plan)
 scraping_cache = {}
@@ -171,7 +181,7 @@ SITE_CONFIGS = {
             "img[class*='product'][class*='image']",
             "img[data-testid='product-image']",
             "img[alt*='product']",
-            "img[alt*='ürün']"
+            "img[alt*='ürün"]"
         ],
         "price_selectors": [
             "span[data-testid='price']",
@@ -701,23 +711,18 @@ def detect_sahibinden_brand_from_title(title):
     
     return "UNKNOWN"
 
-# Login manager
+# Login manager setup
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-
-# CSP Headers
-@app.after_request
-def add_security_headers(response):
-    response.headers['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'"
-    return response
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.get_by_id(user_id)
 
-# Veritabanını başlat
-init_db()
+# Initialize database
+with app.app_context():
+    init_db()
 
 BRANDS = [
     ("koton.com", "Koton"),
@@ -2413,26 +2418,12 @@ def index():
 def health_check():
     """Health check endpoint for Render"""
     try:
-        # Check database connection
-        from models import get_db_connection
+        # Test database connection
         conn = get_db_connection()
         conn.close()
-        
-        # Check memory usage
-        memory_usage = psutil.virtual_memory().percent
-        
-        return jsonify({
-            "status": "healthy",
-            "memory_usage": f"{memory_usage}%",
-            "cache_size": len(scraping_cache),
-            "timestamp": time.time()
-        }), 200
+        return jsonify({"status": "healthy", "database": "connected"}), 200
     except Exception as e:
-        return jsonify({
-            "status": "unhealthy",
-            "error": str(e),
-            "timestamp": time.time()
-        }), 500
+        return jsonify({"status": "unhealthy", "error": str(e)}), 500
 
 @app.route("/admin/brands")
 @login_required
@@ -2490,8 +2481,13 @@ def delete_brand(domain):
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    products = current_user.get_products()
-    return render_template("dashboard.html", products=products)
+    try:
+        products = current_user.get_products()
+        return render_template("dashboard.html", products=products)
+    except Exception as e:
+        print(f"[HATA] Dashboard yükleme hatası: {e}")
+        flash("Ürünler yüklenirken hata oluştu", "error")
+        return render_template("dashboard.html", products=[])
 
 @app.route("/profile")
 @login_required
@@ -2669,7 +2665,14 @@ def add_product():
     
     if product_url:
         try:
-            product_data = asyncio.run(scrape_product(product_url))
+            # Async scraping'i Flask context'inde çalıştır
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                product_data = loop.run_until_complete(scrape_product(product_url))
+            finally:
+                loop.close()
+                
             if product_data:
                 # Hepsiburada için özel alan adları
                 name = product_data.get('title') or product_data.get('name', '')
@@ -2685,24 +2688,40 @@ def add_product():
                     brand,
                     product_data['url']
                 )
-                flash(f"Ürün eklendi: {product_data['name']}", "success")
+                flash(f"Ürün eklendi: {name}", "success")
+            else:
+                flash("Ürün verisi çekilemedi", "error")
         except Exception as e:
             flash("Ürün eklenirken hata oluştu", "error")
             print(f"[HATA] Ürün eklenirken hata: {e}")
+            traceback.print_exc()
     
     elif bulk_urls:
         urls = [url.strip() for url in bulk_urls.split('\n') if url.strip()]
         added_count = 0
+        
         for url in urls:
             try:
-                product_data = asyncio.run(scrape_product(url))
+                # Async scraping'i Flask context'inde çalıştır
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    product_data = loop.run_until_complete(scrape_product(url))
+                finally:
+                    loop.close()
+                    
                 if product_data:
+                    name = product_data.get('title') or product_data.get('name', '')
+                    price = product_data.get('current_price') or product_data.get('price', '')
+                    image = product_data.get('image', '')
+                    brand = product_data.get('brand', '')
+                    
                     Product.create(
                         current_user.id,
-                        product_data['name'],
-                        product_data['price'],
-                        product_data['image'],
-                        product_data['brand'],
+                        name,
+                        price,
+                        image,
+                        brand,
                         product_data['url']
                     )
                     added_count += 1
@@ -2711,6 +2730,8 @@ def add_product():
         
         if added_count > 0:
             flash(f"{added_count} ürün eklendi", "success")
+        else:
+            flash("Hiçbir ürün eklenemedi", "error")
     
     return redirect(url_for("dashboard"))
 
@@ -2823,14 +2844,14 @@ def price_tracking():
     from models import PriceTracking
     
     # Kullanıcının fiyat takiplerini getir
-    tracking_items = PriceTracking.get_user_tracking(current_user.id)
+    tracking_items = PriceTracking.get_user_trackings(current_user.id)
     
     # İstatistikleri hesapla
     tracking_stats = {
         'total_products': len(tracking_items),
-        'active_alerts': sum(1 for item in tracking_items if item[7]),  # alert_price
-        'price_drops': sum(1 for item in tracking_items if float(item[4] or 0) < 0),  # price_change
-        'total_savings': abs(sum(float(item[4] or 0) for item in tracking_items if float(item[4] or 0) < 0))
+        'active_alerts': sum(1 for item in tracking_items if item.alert_price),
+        'price_drops': 0,  # Bu özellik henüz implement edilmedi
+        'total_savings': 0  # Bu özellik henüz implement edilmedi
     }
     
     return render_template("price_tracking.html", 
@@ -2882,94 +2903,39 @@ def add_price_tracking():
 @login_required
 def get_price_history(tracking_id):
     """Fiyat geçmişini JSON olarak döndür"""
-    import sqlite3
-    from datetime import datetime, timedelta
-    
-    conn = sqlite3.connect('favit.db')
-    cursor = conn.cursor()
-    
-    # Son 30 günün fiyat geçmişini getir
-    thirty_days_ago = datetime.now() - timedelta(days=30)
-    
-    cursor.execute('''
-        SELECT price, recorded_at 
-        FROM price_history 
-        WHERE product_id = ? AND recorded_at >= ?
-        ORDER BY recorded_at ASC
-    ''', (tracking_id, thirty_days_ago))
-    
-    history_data = cursor.fetchall()
-    conn.close()
-    
-    # Veriyi Chart.js için formatla
-    labels = []
-    prices = []
-    
-    for price, recorded_at in history_data:
-        # Tarihi formatla
-        if isinstance(recorded_at, str):
-            dt = datetime.fromisoformat(recorded_at.replace('Z', '+00:00'))
-        else:
-            dt = recorded_at
-        
-        labels.append(dt.strftime('%d.%m'))
-        prices.append(float(price.replace('₺', '').replace('TL', '').replace(',', '').strip()))
-    
+    # Bu özellik henüz implement edilmedi
     return jsonify({
-        'labels': labels,
-        'prices': prices
+        "success": False,
+        "message": "Fiyat geçmişi özelliği henüz mevcut değil"
     })
 
 @app.route("/price-tracking/update-alert", methods=["POST"])
 @login_required
 def update_price_alert():
     """Fiyat alarmını güncelle"""
-    import sqlite3
-    
-    tracking_id = request.form.get("tracking_id")
-    alert_price = request.form.get("alert_price")
-    
-    if not tracking_id:
-        return jsonify({"success": False, "message": "Takip ID gerekli"})
-    
-    try:
-        conn = sqlite3.connect('favit.db')
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE price_tracking 
-            SET alert_price = ? 
-            WHERE id = ? AND user_id = ?
-        ''', (alert_price, tracking_id, current_user.id))
-        
-        conn.commit()
-        conn.close()
-        
-        return jsonify({"success": True})
-        
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)})
+    # Bu özellik henüz implement edilmedi
+    return jsonify({
+        "success": False,
+        "message": "Fiyat alarmı güncelleme özelliği henüz mevcut değil"
+    })
 
 @app.route("/price-tracking/<tracking_id>/remove", methods=["DELETE"])
 @login_required
 def remove_price_tracking(tracking_id):
     """Fiyat takibini kaldır"""
-    import sqlite3
-    
     try:
-        conn = sqlite3.connect('favit.db')
-        cursor = conn.cursor()
+        from models import PriceTracking
         
-        cursor.execute('''
-            UPDATE price_tracking 
-            SET is_active = 0 
-            WHERE id = ? AND user_id = ?
-        ''', (tracking_id, current_user.id))
+        # Fiyat takibini bul
+        tracking = PriceTracking.get_by_id(tracking_id)
+        if not tracking or tracking.user_id != current_user.id:
+            return jsonify({"success": False, "message": "Fiyat takibi bulunamadı"})
         
-        conn.commit()
-        conn.close()
-        
-        return jsonify({"success": True})
+        # Fiyat takibini sil
+        if tracking.delete():
+            return jsonify({"success": True})
+        else:
+            return jsonify({"success": False, "message": "Fiyat takibi silinemedi"})
         
     except Exception as e:
         return jsonify({"success": False, "message": str(e)})
@@ -2978,62 +2944,11 @@ def remove_price_tracking(tracking_id):
 @login_required
 def update_prices():
     """Otomatik fiyat güncellemesi simüle et"""
-    from models import PriceTracking
-    import random
-    
-    tracking_items = PriceTracking.get_user_tracking(current_user.id)
-    updated_count = 0
-    notifications = []
-    
-    for item in tracking_items:
-        tracking_id = item[0]
-        current_price = float(item[3] or 0)
-        original_price = float(item[5] or 0)
-        alert_price = float(item[7] or 0) if item[7] else None
-        
-        # Simüle edilmiş fiyat değişimi (-%10 ile +%5 arası)
-        price_change = random.uniform(-0.1, 0.05)
-        new_price = current_price * (1 + price_change)
-        
-        # Fiyatı güncelle
-        PriceTracking.update_price(tracking_id, new_price)
-        updated_count += 1
-        
-        # Bildirim kontrolü
-        if new_price < current_price:
-            # Fiyat düştü
-            notifications.append({
-                'type': 'price_drop',
-                'message': f"📉 {item[10]} ürününün fiyatı {current_price:.2f}₺'den {new_price:.2f}₺'ye düştü!",
-                'product_name': item[10],
-                'old_price': current_price,
-                'new_price': new_price
-            })
-        
-        elif new_price > current_price:
-            # Fiyat yükseldi
-            notifications.append({
-                'type': 'price_increase',
-                'message': f"📈 {item[10]} ürününün fiyatı {current_price:.2f}₺'den {new_price:.2f}₺'ye yükseldi.",
-                'product_name': item[10],
-                'old_price': current_price,
-                'new_price': new_price
-            })
-        
-        # Alarm kontrolü
-        if alert_price and new_price <= alert_price:
-            notifications.append({
-                'type': 'price_alert',
-                'message': f"🚨 {item[10]} ürünü alarm fiyatına ({alert_price:.2f}₺) ulaştı! Şu anki fiyat: {new_price:.2f}₺",
-                'product_name': item[10],
-                'alert_price': alert_price,
-                'current_price': new_price
-            })
-    
+    # Bu özellik henüz implement edilmedi
     return jsonify({
         "success": True, 
-        "updated": updated_count > 0,
-        "notifications": notifications
+        "updated": False,
+        "message": "Otomatik fiyat güncelleme özelliği henüz mevcut değil"
     })
 
 # Bildirim sistemi için yeni rotalar
@@ -3041,81 +2956,48 @@ def update_prices():
 @login_required
 def get_notifications():
     """Kullanıcının bildirimlerini getir"""
-    from models import PriceTracking
-    import random
+    from models import Notification
     
-    # Simüle edilmiş bildirimler (gerçek uygulamada veritabanından gelecek)
-    notifications = []
-    
-    # Son fiyat güncellemelerinden bildirimler oluştur
-    tracking_items = PriceTracking.get_user_tracking(current_user.id)
-    
-    for item in tracking_items:
-        current_price = float(item[3] or 0)
-        original_price = float(item[5] or 0)
-        alert_price = float(item[7] or 0) if item[7] else None
-        
-        # Fiyat değişimi hesapla
-        price_change = current_price - original_price
-        change_percent = (price_change / original_price) * 100 if original_price > 0 else 0
-        
-        if price_change < 0:
-            # Fiyat düştü
-            notifications.append({
-                'id': f"notif_{len(notifications)}",
-                'type': 'price_drop',
-                'title': 'Fiyat Düştü! 📉',
-                'message': f"{item[10]} ürününün fiyatı %{abs(change_percent):.1f} düştü",
-                'details': f"Eski fiyat: {original_price:.2f}₺ → Yeni fiyat: {current_price:.2f}₺",
-                'product_name': item[10],
-                'timestamp': item[9] if item[9] else 'Şimdi',
-                'is_read': False
-            })
-        elif price_change > 0:
-            # Fiyat yükseldi
-            notifications.append({
-                'id': f"notif_{len(notifications)}",
-                'type': 'price_increase',
-                'title': 'Fiyat Yükseldi 📈',
-                'message': f"{item[10]} ürününün fiyatı %{change_percent:.1f} yükseldi",
-                'details': f"Eski fiyat: {original_price:.2f}₺ → Yeni fiyat: {current_price:.2f}₺",
-                'product_name': item[10],
-                'timestamp': item[9] if item[9] else 'Şimdi',
-                'is_read': False
-            })
-        
-        # Alarm kontrolü
-        if alert_price and current_price <= alert_price:
-            notifications.append({
-                'id': f"notif_{len(notifications)}",
-                'type': 'price_alert',
-                'title': 'Fiyat Alarmı! 🚨',
-                'message': f"{item[10]} ürünü alarm fiyatına ulaştı",
-                'details': f"Alarm fiyatı: {alert_price:.2f}₺, Şu anki fiyat: {current_price:.2f}₺",
-                'product_name': item[10],
-                'timestamp': item[9] if item[9] else 'Şimdi',
-                'is_read': False
-            })
+    # Kullanıcının bildirimlerini getir
+    notifications = Notification.get_user_notifications(current_user.id)
+    unread_count = Notification.get_unread_count(current_user.id)
     
     return jsonify({
         "success": True,
-        "notifications": notifications,
-        "unread_count": len([n for n in notifications if not n['is_read']])
+        "notifications": [
+            {
+                "id": n.id,
+                "title": n.title,
+                "message": n.message,
+                "type": n.type,
+                "is_read": n.is_read,
+                "created_at": n.created_at.isoformat() if hasattr(n.created_at, 'isoformat') else str(n.created_at)
+            } for n in notifications
+        ],
+        "unread_count": unread_count
     })
 
 @app.route("/notifications/mark-read/<notification_id>", methods=["POST"])
 @login_required
 def mark_notification_read(notification_id):
     """Bildirimi okundu olarak işaretle"""
-    # Gerçek uygulamada veritabanında güncellenecek
-    return jsonify({"success": True})
+    from models import Notification
+    
+    if Notification.mark_as_read(notification_id):
+        return jsonify({"success": True})
+    else:
+        return jsonify({"success": False, "message": "Bildirim işaretlenemedi"})
 
 @app.route("/notifications/mark-all-read", methods=["POST"])
 @login_required
 def mark_all_notifications_read():
     """Tüm bildirimleri okundu olarak işaretle"""
-    # Gerçek uygulamada veritabanında güncellenecek
-    return jsonify({"success": True})
+    from models import Notification
+    
+    if Notification.mark_all_as_read(current_user.id):
+        return jsonify({"success": True})
+    else:
+        return jsonify({"success": False, "message": "Bildirimler işaretlenemedi"})
 
 # Yeni rotalar: Ürünleri fiyat takibine ekleme/kaldırma
 @app.route("/product/<product_id>/add-to-tracking", methods=["POST"])
@@ -3181,7 +3063,7 @@ def remove_product_from_tracking(product_id):
         if not tracking:
             return jsonify({"success": False, "message": "Bu ürün takip edilmiyor"})
         
-        success = PriceTracking.remove_tracking(tracking[0])  # tracking[0] = tracking_id
+        success = PriceTracking.remove_tracking(tracking.id)
         
         if success:
             return jsonify({
@@ -3208,7 +3090,7 @@ def get_product_tracking_status(product_id):
         return jsonify({
             "success": True,
             "is_tracked": is_tracked,
-            "tracking_id": tracking[0] if tracking else None
+            "tracking_id": tracking.id if tracking else None
         })
         
     except Exception as e:
@@ -3221,19 +3103,11 @@ def get_product_tracking_status(product_id):
 def method_not_allowed(e):
     return redirect(url_for("index"))
 
+# CSP Headers
+@app.after_request
+def add_security_headers(response):
+    response.headers['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'"
+    return response
+
 if __name__ == "__main__":
-    # Veritabanını başlat
-    from models import init_db
-    init_db()
-    print("[INFO] Veritabanı başlatıldı")
-    
-    # Render için port ayarı
-    port = int(os.environ.get('PORT', 8080))
-    debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
-    
-    # Render'da production modda çalıştır
-    if os.environ.get('RENDER'):
-        print("[INFO] Render production modunda çalışıyor")
-        app.run(host="0.0.0.0", port=port, debug=False)
-    else:
-        app.run(host="0.0.0.0", port=port, debug=debug)
+    app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))

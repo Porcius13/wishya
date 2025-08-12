@@ -1,194 +1,127 @@
-import os
+import sqlite3
 import uuid
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
-
-# Database configuration for Render
-def get_db_url():
-    """Get database URL from environment variables"""
-    if os.environ.get('DATABASE_URL'):
-        # Render provides DATABASE_URL, but SQLAlchemy expects postgresql://
-        url = os.environ.get('DATABASE_URL')
-        if url.startswith('postgres://'):
-            url = url.replace('postgres://', 'postgresql://', 1)
-        return url
-    else:
-        # Fallback to SQLite for local development
-        return 'sqlite:///favit.db'
+import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 def get_db_connection():
-    """Get database connection based on environment"""
-    if os.environ.get('DATABASE_URL'):
-        # Use PostgreSQL for production
-        import psycopg2
-        from urllib.parse import urlparse
+    """Database bağlantısı - Render PostgreSQL veya local SQLite"""
+    if os.environ.get('RENDER'):
+        # Render PostgreSQL
+        database_url = os.environ.get('DATABASE_URL')
+        if database_url and database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
         
-        url = urlparse(os.environ.get('DATABASE_URL'))
-        conn = psycopg2.connect(
-            host=url.hostname,
-            database=url.path[1:],
-            user=url.username,
-            password=url.password,
-            port=url.port or 5432
-        )
-        return conn
+        try:
+            conn = psycopg2.connect(database_url)
+            return conn
+        except Exception as e:
+            print(f"[HATA] PostgreSQL bağlantı hatası: {e}")
+            # Fallback to SQLite
+            return sqlite3.connect('wishya.db')
     else:
-        # Use SQLite for local development
-        import sqlite3
-        return sqlite3.connect('favit.db')
+        # Local SQLite
+        return sqlite3.connect('wishya.db')
 
 def init_db():
-    """Veritabanını başlat"""
+    """Database tablolarını oluştur"""
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Check if we're using PostgreSQL
-    is_postgres = os.environ.get('DATABASE_URL') is not None
-    
-    if is_postgres:
-        # PostgreSQL syntax
+    if os.environ.get('RENDER'):
+        # PostgreSQL için tablo oluşturma
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
-                id TEXT PRIMARY KEY,
-                username TEXT UNIQUE NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                profile_url TEXT UNIQUE
+                id VARCHAR(255) PRIMARY KEY,
+                username VARCHAR(255) UNIQUE NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                profile_url VARCHAR(255) UNIQUE NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
         
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS products (
-                id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
+                id VARCHAR(255) PRIMARY KEY,
+                user_id VARCHAR(255) NOT NULL,
                 name TEXT NOT NULL,
-                price TEXT NOT NULL,
+                price VARCHAR(255) NOT NULL,
                 image TEXT,
-                brand TEXT NOT NULL,
+                brand VARCHAR(255),
                 url TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                old_price VARCHAR(255),
+                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
             )
         ''')
         
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS collections (
-                id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
-                name TEXT NOT NULL,
+                id VARCHAR(255) PRIMARY KEY,
+                user_id VARCHAR(255) NOT NULL,
+                name VARCHAR(255) NOT NULL,
                 description TEXT,
-                type TEXT NOT NULL,
+                type VARCHAR(255) NOT NULL,
                 is_public BOOLEAN DEFAULT TRUE,
-                share_url TEXT UNIQUE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                share_url VARCHAR(255) UNIQUE NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
             )
         ''')
         
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS collection_products (
-                id TEXT PRIMARY KEY,
-                collection_id TEXT NOT NULL,
-                product_id TEXT NOT NULL,
-                added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                collection_id VARCHAR(255) NOT NULL,
+                product_id VARCHAR(255) NOT NULL,
+                added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (collection_id, product_id),
+                FOREIGN KEY (collection_id) REFERENCES collections (id) ON DELETE CASCADE,
+                FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
             )
         ''')
         
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS price_tracking (
-                id TEXT PRIMARY KEY,
-                product_id TEXT NOT NULL,
-                user_id TEXT NOT NULL,
-                current_price TEXT NOT NULL,
-                original_price TEXT NOT NULL,
-                price_change TEXT DEFAULT '0',
-                is_active BOOLEAN DEFAULT TRUE,
-                alert_price TEXT,
+                id VARCHAR(255) PRIMARY KEY,
+                user_id VARCHAR(255) NOT NULL,
+                product_id VARCHAR(255) NOT NULL,
+                current_price DECIMAL(10,2) NOT NULL,
+                original_price DECIMAL(10,2),
+                alert_price DECIMAL(10,2),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                last_checked TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS price_history (
-                id TEXT PRIMARY KEY,
-                product_id TEXT NOT NULL,
-                price TEXT NOT NULL,
-                recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS likes (
-                id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
-                collection_id TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS comments (
-                id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
-                collection_id TEXT NOT NULL,
-                comment TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                last_checked TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+                FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
             )
         ''')
         
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS notifications (
-                id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
-                title TEXT NOT NULL,
+                id VARCHAR(255) PRIMARY KEY,
+                user_id VARCHAR(255) NOT NULL,
+                title VARCHAR(255) NOT NULL,
                 message TEXT NOT NULL,
-                type TEXT NOT NULL,
+                type VARCHAR(50) DEFAULT 'info',
                 is_read BOOLEAN DEFAULT FALSE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS scraping_logs (
-                id TEXT PRIMARY KEY,
-                url TEXT NOT NULL,
-                domain TEXT NOT NULL,
-                status TEXT NOT NULL,
-                error_message TEXT,
-                response_time REAL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS rate_limits (
-                id TEXT PRIMARY KEY,
-                domain TEXT NOT NULL,
-                request_count INTEGER DEFAULT 0,
-                last_request TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS follows (
-                id TEXT PRIMARY KEY,
-                follower_id TEXT NOT NULL,
-                following_id TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
             )
         ''')
         
     else:
-        # SQLite syntax (existing code)
+        # SQLite için tablo oluşturma
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
                 id TEXT PRIMARY KEY,
                 username TEXT UNIQUE NOT NULL,
                 email TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                profile_url TEXT UNIQUE
+                profile_url TEXT UNIQUE NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
         
@@ -199,9 +132,10 @@ def init_db():
                 name TEXT NOT NULL,
                 price TEXT NOT NULL,
                 image TEXT,
-                brand TEXT NOT NULL,
+                brand TEXT,
                 url TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                old_price TEXT,
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         ''')
@@ -214,7 +148,7 @@ def init_db():
                 description TEXT,
                 type TEXT NOT NULL,
                 is_public BOOLEAN DEFAULT 1,
-                share_url TEXT UNIQUE,
+                share_url TEXT UNIQUE NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
@@ -222,10 +156,10 @@ def init_db():
         
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS collection_products (
-                id TEXT PRIMARY KEY,
                 collection_id TEXT NOT NULL,
                 product_id TEXT NOT NULL,
                 added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (collection_id, product_id),
                 FOREIGN KEY (collection_id) REFERENCES collections (id),
                 FOREIGN KEY (product_id) REFERENCES products (id)
             )
@@ -234,50 +168,15 @@ def init_db():
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS price_tracking (
                 id TEXT PRIMARY KEY,
-                product_id TEXT NOT NULL,
                 user_id TEXT NOT NULL,
-                current_price TEXT NOT NULL,
-                original_price TEXT NOT NULL,
-                price_change TEXT DEFAULT '0',
-                is_active BOOLEAN DEFAULT 1,
-                alert_price TEXT,
+                product_id TEXT NOT NULL,
+                current_price REAL NOT NULL,
+                original_price REAL,
+                alert_price REAL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 last_checked TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (product_id) REFERENCES products (id),
-                FOREIGN KEY (user_id) REFERENCES users (id)
-            )
-        ''')
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS price_history (
-                id TEXT PRIMARY KEY,
-                product_id TEXT NOT NULL,
-                price TEXT NOT NULL,
-                recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id),
                 FOREIGN KEY (product_id) REFERENCES products (id)
-            )
-        ''')
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS likes (
-                id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
-                collection_id TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users (id),
-                FOREIGN KEY (collection_id) REFERENCES collections (id)
-            )
-        ''')
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS comments (
-                id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
-                collection_id TEXT NOT NULL,
-                comment TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users (id),
-                FOREIGN KEY (collection_id) REFERENCES collections (id)
             )
         ''')
         
@@ -287,47 +186,42 @@ def init_db():
                 user_id TEXT NOT NULL,
                 title TEXT NOT NULL,
                 message TEXT NOT NULL,
-                type TEXT NOT NULL,
+                type TEXT DEFAULT 'info',
                 is_read BOOLEAN DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         ''')
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS scraping_logs (
-                id TEXT PRIMARY KEY,
-                url TEXT NOT NULL,
-                domain TEXT NOT NULL,
-                status TEXT NOT NULL,
-                error_message TEXT,
-                response_time REAL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS rate_limits (
-                id TEXT PRIMARY KEY,
-                domain TEXT NOT NULL,
-                request_count INTEGER DEFAULT 0,
-                last_request TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS follows (
-                id TEXT PRIMARY KEY,
-                follower_id TEXT NOT NULL,
-                following_id TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (follower_id) REFERENCES users (id),
-                FOREIGN KEY (following_id) REFERENCES users (id)
-            )
-        ''')
     
     conn.commit()
     conn.close()
+
+def get_placeholder():
+    """Database placeholder'ını döndür (PostgreSQL: %s, SQLite: ?)"""
+    return '%s' if os.environ.get('RENDER') else '?'
+
+def execute_query(cursor, query, params=None):
+    """Database query'sini çalıştır"""
+    if params is None:
+        params = ()
+    
+    if os.environ.get('RENDER'):
+        # PostgreSQL için parametreleri tuple'a çevir
+        if isinstance(params, list):
+            params = tuple(params)
+        cursor.execute(query, params)
+    else:
+        # SQLite için parametreleri olduğu gibi kullan
+        cursor.execute(query, params)
+
+def get_boolean_value(value):
+    """Database için boolean değerini döndür"""
+    if os.environ.get('RENDER'):
+        # PostgreSQL için True/False
+        return True if value else False
+    else:
+        # SQLite için 1/0
+        return 1 if value else 0
 
 class User(UserMixin):
     def __init__(self, id, username, email, password_hash, created_at, profile_url):
@@ -340,53 +234,75 @@ class User(UserMixin):
     
     @staticmethod
     def get_by_id(user_id):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))
-        user_data = cursor.fetchone()
-        conn.close()
-        
-        if user_data:
-            return User(*user_data)
-        return None
+        """ID ile kullanıcı getir"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'SELECT * FROM users WHERE id = {placeholder}', (user_id,))
+            user_data = cursor.fetchone()
+            conn.close()
+            
+            if user_data:
+                return User(*user_data)
+            return None
+        except Exception as e:
+            print(f"[HATA] Kullanıcı getirme hatası: {e}")
+            return None
     
     @staticmethod
     def get_by_username(username):
-        """Kullanıcı adına göre kullanıcı getir"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM users WHERE username = ?', (username,))
-        user_data = cursor.fetchone()
-        conn.close()
-        
-        if user_data:
-            return User(*user_data)
-        return None
+        """Kullanıcı adı ile kullanıcı getir"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'SELECT * FROM users WHERE username = {placeholder}', (username,))
+            user_data = cursor.fetchone()
+            conn.close()
+            
+            if user_data:
+                return User(*user_data)
+            return None
+        except Exception as e:
+            print(f"[HATA] Kullanıcı adı ile getirme hatası: {e}")
+            return None
     
     @staticmethod
     def get_by_email(email):
-        """Email'e göre kullanıcı getir"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
-        user_data = cursor.fetchone()
-        conn.close()
-        
-        if user_data:
-            return User(*user_data)
-        return None
+        """Email ile kullanıcı getir"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'SELECT * FROM users WHERE email = {placeholder}', (email,))
+            user_data = cursor.fetchone()
+            conn.close()
+            
+            if user_data:
+                return User(*user_data)
+            return None
+        except Exception as e:
+            print(f"[HATA] Email ile getirme hatası: {e}")
+            return None
     
     @staticmethod
     def get_by_profile_url(profile_url):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM users WHERE profile_url = ?', (profile_url,))
-        user_data = cursor.fetchone()
-        conn.close()
-        
-        if user_data:
-            return User(*user_data)
-        return None
+        """Profile URL ile kullanıcı getir"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'SELECT * FROM users WHERE profile_url = {placeholder}', (profile_url,))
+            user_data = cursor.fetchone()
+            conn.close()
+            
+            if user_data:
+                return User(*user_data)
+            return None
+        except Exception as e:
+            print(f"[HATA] Profile URL ile getirme hatası: {e}")
+            return None
     
     @staticmethod
     def create(username, email, password):
@@ -399,9 +315,10 @@ class User(UserMixin):
             conn = get_db_connection()
             cursor = conn.cursor()
             
-            cursor.execute('''
+            placeholder = get_placeholder()
+            execute_query(cursor, f'''
                 INSERT INTO users (id, username, email, password_hash, profile_url)
-                VALUES (?, ?, ?, ?, ?)
+                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
             ''', (user_id, username, email, password_hash, profile_url))
             
             conn.commit()
@@ -418,15 +335,43 @@ class User(UserMixin):
         """Şifre kontrolü"""
         return check_password_hash(self.password_hash, password)
     
+    def save(self):
+        """Kullanıcı bilgilerini güncelle"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'''
+                UPDATE users 
+                SET username = {placeholder}, email = {placeholder}, password_hash = {placeholder}
+                WHERE id = {placeholder}
+            ''', (self.username, self.email, self.password_hash, self.id))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            print(f"[HATA] Kullanıcı güncelleme hatası: {e}")
+            return False
+    
+    def set_password(self, password):
+        """Şifre güncelle"""
+        self.password_hash = generate_password_hash(password)
+        return self.save()
+    
     def get_products(self):
         """Kullanıcının ürünlerini getir"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM products WHERE user_id = ? ORDER BY created_at DESC', (self.id,))
-        products = cursor.fetchall()
-        conn.close()
-        
-        return [Product(*product) for product in products]
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'SELECT * FROM products WHERE user_id = {placeholder} ORDER BY created_at DESC', (self.id,))
+            products = cursor.fetchall()
+            conn.close()
+            
+            return [Product(*product) for product in products]
+        except Exception as e:
+            print(f"[HATA] Kullanıcı ürünleri getirme hatası: {e}")
+            return []
     
     def get_collections(self):
         """Kullanıcının koleksiyonlarını getir"""
@@ -447,54 +392,75 @@ class Product:
     @staticmethod
     def create(user_id, name, price, image, brand, url):
         """Yeni ürün oluştur"""
-        product_id = str(uuid.uuid4())
-        created_at = datetime.now()
-        
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            INSERT INTO products (id, user_id, name, price, image, brand, url, created_at, old_price)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (product_id, user_id, name, price, image, brand, url, created_at, None))
-        
-        conn.commit()
-        conn.close()
-        
-        return Product(product_id, user_id, name, price, image, brand, url, created_at, None)
+        try:
+            product_id = str(uuid.uuid4())
+            created_at = datetime.now()
+            
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            placeholder = get_placeholder()
+            execute_query(cursor, f'''
+                INSERT INTO products (id, user_id, name, price, image, brand, url, created_at, old_price)
+                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
+            ''', (product_id, user_id, name, price, image, brand, url, created_at, None))
+            
+            conn.commit()
+            conn.close()
+            
+            return Product(product_id, user_id, name, price, image, brand, url, created_at, None)
+        except Exception as e:
+            print(f"[HATA] Ürün oluşturma hatası: {e}")
+            return None
     
     @staticmethod
     def get_by_id(product_id):
         """ID ile ürün getir"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM products WHERE id = ?', (product_id,))
-        product_data = cursor.fetchone()
-        conn.close()
-        
-        if product_data:
-            return Product(*product_data)
-        return None
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'SELECT * FROM products WHERE id = {placeholder}', (product_id,))
+            product_data = cursor.fetchone()
+            conn.close()
+            
+            if product_data:
+                return Product(*product_data)
+            return None
+        except Exception as e:
+            print(f"[HATA] Ürün getirme hatası: {e}")
+            return None
     
     @staticmethod
     def delete(product_id, user_id):
         """Ürün sil"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('DELETE FROM products WHERE id = ? AND user_id = ?', (product_id, user_id))
-        conn.commit()
-        conn.close()
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'DELETE FROM products WHERE id = {placeholder} AND user_id = {placeholder}', (product_id, user_id))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            print(f"[HATA] Ürün silme hatası: {e}")
+            return False
 
     @staticmethod
     def get_user_products(user_id):
         """Kullanıcının ürünlerini getir"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM products WHERE user_id = ? ORDER BY created_at DESC', (user_id,))
-        products = cursor.fetchall()
-        conn.close()
-        
-        return [Product(*product) for product in products]
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'SELECT * FROM products WHERE user_id = {placeholder} ORDER BY created_at DESC', (user_id,))
+            products = cursor.fetchall()
+            conn.close()
+            
+            return [Product(*product) for product in products]
+        except Exception as e:
+            print(f"[HATA] Kullanıcı ürünleri getirme hatası: {e}")
+            return []
 
 class Collection:
     def __init__(self, id, user_id, name, description, type, is_public, share_url, created_at):
@@ -510,125 +476,163 @@ class Collection:
     @staticmethod
     def create(user_id, name, description, type, is_public=True):
         """Yeni koleksiyon oluştur"""
-        collection_id = str(uuid.uuid4())
-        share_url = f"collection_{collection_id[:8]}"
-        
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            INSERT INTO collections (id, user_id, name, description, type, is_public, share_url, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (collection_id, user_id, name, description, type, is_public, share_url, datetime.now()))
-        
-        conn.commit()
-        conn.close()
-        
-        return Collection(collection_id, user_id, name, description, type, is_public, share_url, datetime.now())
+        try:
+            collection_id = str(uuid.uuid4())
+            share_url = f"collection_{collection_id[:8]}"
+            
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            placeholder = get_placeholder()
+            execute_query(cursor, f'''
+                INSERT INTO collections (id, user_id, name, description, type, is_public, share_url)
+                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
+            ''', (collection_id, user_id, name, description, type, get_boolean_value(is_public), share_url))
+            
+            conn.commit()
+            conn.close()
+            
+            return Collection(collection_id, user_id, name, description, type, is_public, share_url, datetime.now())
+        except Exception as e:
+            print(f"[HATA] Koleksiyon oluşturma hatası: {e}")
+            return None
     
     @staticmethod
     def get_by_id(collection_id):
         """ID ile koleksiyon getir"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM collections WHERE id = ?', (collection_id,))
-        collection_data = cursor.fetchone()
-        conn.close()
-        
-        if collection_data:
-            return Collection(*collection_data)
-        return None
-    
-    @staticmethod
-    def get_by_share_url(share_url):
-        """Share URL ile koleksiyon getir"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM collections WHERE share_url = ?', (share_url,))
-        collection_data = cursor.fetchone()
-        conn.close()
-        
-        if collection_data:
-            return Collection(*collection_data)
-        return None
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'SELECT * FROM collections WHERE id = {placeholder}', (collection_id,))
+            collection_data = cursor.fetchone()
+            conn.close()
+            
+            if collection_data:
+                return Collection(*collection_data)
+            return None
+        except Exception as e:
+            print(f"[HATA] Koleksiyon getirme hatası: {e}")
+            return None
     
     @staticmethod
     def get_user_collections(user_id):
         """Kullanıcının koleksiyonlarını getir"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM collections WHERE user_id = ? ORDER BY created_at DESC', (user_id,))
-        collections = cursor.fetchall()
-        conn.close()
-        
-        return [Collection(*collection) for collection in collections]
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            placeholder = get_placeholder()
+            execute_query(cursor, f'SELECT * FROM collections WHERE user_id = {placeholder} ORDER BY created_at DESC', (user_id,))
+            collections = cursor.fetchall()
+            conn.close()
+            
+            return [Collection(*collection) for collection in collections]
+        except Exception as e:
+            print(f"[HATA] Kullanıcı koleksiyonları getirme hatası: {e}")
+            return []
     
-
+    @staticmethod
+    def get_by_share_url(share_url):
+        """Share URL ile koleksiyon getir"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'SELECT * FROM collections WHERE share_url = {placeholder}', (share_url,))
+            collection_data = cursor.fetchone()
+            conn.close()
+            
+            if collection_data:
+                return Collection(*collection_data)
+            return None
+        except Exception as e:
+            print(f"[HATA] Share URL ile koleksiyon getirme hatası: {e}")
+            return None
     
     def get_products(self):
         """Koleksiyondaki ürünleri getir"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            SELECT p.* FROM products p
-            JOIN collection_products cp ON p.id = cp.product_id
-            WHERE cp.collection_id = ?
-            ORDER BY cp.added_at DESC
-        ''', (self.id,))
-        products = cursor.fetchall()
-        conn.close()
-        
-        return [Product(*product) for product in products]
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'''
+                SELECT p.* FROM products p
+                JOIN collection_products cp ON p.id = cp.product_id
+                WHERE cp.collection_id = {placeholder}
+                ORDER BY cp.added_at DESC
+            ''', (self.id,))
+            products = cursor.fetchall()
+            conn.close()
+            
+            return [Product(*product) for product in products]
+        except Exception as e:
+            print(f"[HATA] Koleksiyon ürünleri getirme hatası: {e}")
+            return []
     
     def add_product(self, product_id):
         """Koleksiyona ürün ekle"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Ürünün zaten koleksiyonda olup olmadığını kontrol et
-        cursor.execute('SELECT id FROM collection_products WHERE collection_id = ? AND product_id = ?', (self.id, product_id))
-        if cursor.fetchone():
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # Ürünün zaten koleksiyonda olup olmadığını kontrol et
+            placeholder = get_placeholder()
+            execute_query(cursor, f'SELECT id FROM collection_products WHERE collection_id = {placeholder} AND product_id = {placeholder}', (self.id, product_id))
+            if cursor.fetchone():
+                conn.close()
+                return False
+            
+            execute_query(cursor, f'''
+                INSERT INTO collection_products (collection_id, product_id)
+                VALUES ({placeholder}, {placeholder})
+            ''', (self.id, product_id))
+            
+            conn.commit()
             conn.close()
+            return True
+        except Exception as e:
+            print(f"[HATA] Koleksiyona ürün ekleme hatası: {e}")
             return False
-        
-        cp_id = str(uuid.uuid4())
-        cursor.execute('''
-            INSERT INTO collection_products (id, collection_id, product_id)
-            VALUES (?, ?, ?)
-        ''', (cp_id, self.id, product_id))
-        
-        conn.commit()
-        conn.close()
-        return True
     
     def remove_product(self, product_id):
         """Koleksiyondan ürün çıkar"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('DELETE FROM collection_products WHERE collection_id = ? AND product_id = ?', (self.id, product_id))
-        conn.commit()
-        conn.close()
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'DELETE FROM collection_products WHERE collection_id = {placeholder} AND product_id = {placeholder}', (self.id, product_id))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            print(f"[HATA] Koleksiyondan ürün çıkarma hatası: {e}")
+            return False
     
     def delete(self):
         """Koleksiyonu sil"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('DELETE FROM collection_products WHERE collection_id = ?', (self.id,))
-        cursor.execute('DELETE FROM collections WHERE id = ?', (self.id,))
-        conn.commit()
-        conn.close()
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'DELETE FROM collection_products WHERE collection_id = {placeholder}', (self.id,))
+            execute_query(cursor, f'DELETE FROM collections WHERE id = {placeholder}', (self.id,))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            print(f"[HATA] Koleksiyon silme hatası: {e}")
+            return False
     
 
 
 class PriceTracking:
-    def __init__(self, id, product_id, user_id, current_price, original_price, price_change, is_active, alert_price, created_at, last_checked):
+    def __init__(self, id, user_id, product_id, current_price, original_price, alert_price, created_at, last_checked):
         self.id = id
-        self.product_id = product_id
         self.user_id = user_id
+        self.product_id = product_id
         self.current_price = current_price
         self.original_price = original_price
-        self.price_change = price_change
-        self.is_active = is_active
         self.alert_price = alert_price
         self.created_at = created_at
         self.last_checked = last_checked
@@ -636,124 +640,217 @@ class PriceTracking:
     @staticmethod
     def create(user_id, product_id, current_price, original_price=None, alert_price=None):
         """Fiyat takibi oluştur"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        tracking_id = str(uuid.uuid4())
-        original_price = original_price or current_price
-        
-        cursor.execute('''
-            INSERT INTO price_tracking (id, user_id, product_id, current_price, original_price, alert_price)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (tracking_id, user_id, product_id, current_price, original_price, alert_price))
-        
-        # Fiyat geçmişine ekle
-        history_id = str(uuid.uuid4())
-        cursor.execute('''
-            INSERT INTO price_history (id, product_id, price)
-            VALUES (?, ?, ?)
-        ''', (history_id, product_id, current_price))
-        
-        conn.commit()
-        conn.close()
-        
-        return tracking_id
-    
-    @staticmethod
-    def get_by_product_and_user(product_id, user_id):
-        """Belirli bir ürün için kullanıcının takip kaydını getir"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            SELECT id, product_id, user_id, current_price, price_change, 
-                   original_price, is_active, alert_price, created_at, last_checked
-            FROM price_tracking 
-            WHERE product_id = ? AND user_id = ? AND is_active = 1
-        ''', (product_id, user_id))
-        tracking_data = cursor.fetchone()
-        conn.close()
-        
-        return tracking_data
-    
-    @staticmethod
-    def remove_tracking(tracking_id):
-        """Fiyat takibini kaldır (pasif hale getir)"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE price_tracking 
-            SET is_active = 0 
-            WHERE id = ?
-        ''', (tracking_id,))
-        
-        conn.commit()
-        conn.close()
-        
-        return True
-    
-    @staticmethod
-    def get_user_tracking(user_id):
-        """Kullanıcının fiyat takiplerini getir"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            SELECT pt.id, pt.product_id, pt.user_id, pt.current_price, pt.price_change, 
-                   pt.original_price, pt.is_active, pt.alert_price, pt.created_at, pt.last_checked,
-                   p.name, p.brand, p.image 
-            FROM price_tracking pt
-            JOIN products p ON pt.product_id = p.id
-            WHERE pt.user_id = ? AND pt.is_active = 1
-            ORDER BY pt.created_at DESC
-        ''', (user_id,))
-        tracking_data = cursor.fetchall()
-        conn.close()
-        
-        return tracking_data
-    
-    @staticmethod
-    def update_price(tracking_id, new_price):
-        """Fiyat güncelle"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Mevcut fiyatı al
-        cursor.execute('SELECT current_price, original_price FROM price_tracking WHERE id = ?', (tracking_id,))
-        current_data = cursor.fetchone()
-        
-        if current_data:
-            current_price = current_data[0]
-            original_price = current_data[1]
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
             
-            # Fiyat değişimini hesapla
-            try:
-                current_num = float(str(current_price).replace('₺', '').replace('TL', '').replace(',', '').strip())
-                new_num = float(str(new_price).replace('₺', '').replace('TL', '').replace(',', '').strip())
-                price_change = new_num - current_num
-            except:
-                price_change = 0
+            tracking_id = str(uuid.uuid4())
+            original_price = original_price or current_price
             
-            # Fiyat takibini güncelle
-            cursor.execute('''
-                UPDATE price_tracking 
-                SET current_price = ?, price_change = ?, last_checked = ?
-                WHERE id = ?
-            ''', (new_price, str(price_change), datetime.now(), tracking_id))
-            
-            # Fiyat geçmişine ekle
-            history_id = str(uuid.uuid4())
-            cursor.execute('''
-                INSERT INTO price_history (id, product_id, price)
-                VALUES (?, ?, ?)
-            ''', (history_id, tracking_id, new_price))
+            placeholder = get_placeholder()
+            execute_query(cursor, f'''
+                INSERT INTO price_tracking (id, user_id, product_id, current_price, original_price, alert_price)
+                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
+            ''', (tracking_id, user_id, product_id, current_price, original_price, alert_price))
             
             conn.commit()
             conn.close()
-            return True
-        
-        conn.close()
-        return False
+            
+            return tracking_id
+        except Exception as e:
+            print(f"[HATA] Fiyat takibi oluşturma hatası: {e}")
+            return None
     
+    @staticmethod
+    def get_by_product_and_user(product_id, user_id):
+        """Ürün ve kullanıcı için fiyat takibi getir"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'SELECT * FROM price_tracking WHERE product_id = {placeholder} AND user_id = {placeholder}', (product_id, user_id))
+            tracking_data = cursor.fetchone()
+            conn.close()
+            
+            if tracking_data:
+                return PriceTracking(*tracking_data)
+            return None
+        except Exception as e:
+            print(f"[HATA] Fiyat takibi getirme hatası: {e}")
+            return None
+    
+    @staticmethod
+    def get_user_trackings(user_id):
+        """Kullanıcının fiyat takiplerini getir"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'SELECT * FROM price_tracking WHERE user_id = {placeholder} ORDER BY created_at DESC', (user_id,))
+            trackings = cursor.fetchall()
+            conn.close()
+            
+            return [PriceTracking(*tracking) for tracking in trackings]
+        except Exception as e:
+            print(f"[HATA] Kullanıcı fiyat takipleri getirme hatası: {e}")
+            return []
+    
+    @staticmethod
+    def get_by_id(tracking_id):
+        """ID ile fiyat takibi getir"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'SELECT * FROM price_tracking WHERE id = {placeholder}', (tracking_id,))
+            tracking_data = cursor.fetchone()
+            conn.close()
+            
+            if tracking_data:
+                return PriceTracking(*tracking_data)
+            return None
+        except Exception as e:
+            print(f"[HATA] Fiyat takibi getirme hatası: {e}")
+            return None
+    
+    def delete(self):
+        """Fiyat takibini sil"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'DELETE FROM price_tracking WHERE id = {placeholder}', (self.id,))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            print(f"[HATA] Fiyat takibi silme hatası: {e}")
+            return False
+    
+    @staticmethod
+    def remove_tracking(tracking_id):
+        """Fiyat takibini kaldır"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'DELETE FROM price_tracking WHERE id = {placeholder}', (tracking_id,))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            print(f"[HATA] Fiyat takibi kaldırma hatası: {e}")
+            return False
 
 
- 
+class Notification:
+    def __init__(self, id, user_id, title, message, type, is_read, created_at):
+        self.id = id
+        self.user_id = user_id
+        self.title = title
+        self.message = message
+        self.type = type
+        self.is_read = is_read
+        self.created_at = created_at
+    
+    @staticmethod
+    def create(user_id, title, message, type="info"):
+        """Yeni bildirim oluştur"""
+        try:
+            notification_id = str(uuid.uuid4())
+            
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            placeholder = get_placeholder()
+            execute_query(cursor, f'''
+                INSERT INTO notifications (id, user_id, title, message, type)
+                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
+            ''', (notification_id, user_id, title, message, type))
+            
+            conn.commit()
+            conn.close()
+            
+            return notification_id
+        except Exception as e:
+            print(f"[HATA] Bildirim oluşturma hatası: {e}")
+            return None
+    
+    @staticmethod
+    def get_user_notifications(user_id, limit=50):
+        """Kullanıcının bildirimlerini getir"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            
+            if os.environ.get('RENDER'):
+                # PostgreSQL için LIMIT syntax
+                execute_query(cursor, f'''
+                    SELECT * FROM notifications 
+                    WHERE user_id = {placeholder} 
+                    ORDER BY created_at DESC 
+                    LIMIT {limit}
+                ''', (user_id,))
+            else:
+                # SQLite için LIMIT syntax
+                execute_query(cursor, f'''
+                    SELECT * FROM notifications 
+                    WHERE user_id = {placeholder} 
+                    ORDER BY created_at DESC 
+                    LIMIT {placeholder}
+                ''', (user_id, limit))
+                
+            notifications = cursor.fetchall()
+            conn.close()
+            
+            return [Notification(*notification) for notification in notifications]
+        except Exception as e:
+            print(f"[HATA] Bildirimler getirme hatası: {e}")
+            return []
+    
+    @staticmethod
+    def mark_as_read(notification_id):
+        """Bildirimi okundu olarak işaretle"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'UPDATE notifications SET is_read = {get_boolean_value(True)} WHERE id = {placeholder}', (notification_id,))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            print(f"[HATA] Bildirim okundu işaretleme hatası: {e}")
+            return False
+    
+    @staticmethod
+    def mark_all_as_read(user_id):
+        """Kullanıcının tüm bildirimlerini okundu olarak işaretle"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'UPDATE notifications SET is_read = {get_boolean_value(True)} WHERE user_id = {placeholder}', (user_id,))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            print(f"[HATA] Tüm bildirimleri okundu işaretleme hatası: {e}")
+            return False
+    
+    @staticmethod
+    def get_unread_count(user_id):
+        """Kullanıcının okunmamış bildirim sayısını getir"""
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            execute_query(cursor, f'SELECT COUNT(*) FROM notifications WHERE user_id = {placeholder} AND is_read = {get_boolean_value(False)}', (user_id,))
+            count = cursor.fetchone()[0]
+            conn.close()
+            
+            return count
+        except Exception as e:
+            print(f"[HATA] Okunmamış bildirim sayısı getirme hatası: {e}")
+            return 0 
