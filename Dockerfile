@@ -4,32 +4,11 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies in one layer to reduce image size
+# Install minimal system dependencies
 RUN apt-get update && apt-get install -y \
     wget \
     curl \
     ca-certificates \
-    fonts-liberation \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    libdrm2 \
-    libgtk-3-0 \
-    libnspr4 \
-    libnss3 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
-    xdg-utils \
-    libglib2.0-0 \
-    libcups2 \
-    libdbus-1-3 \
-    libatspi2.0-0 \
-    libxkbcommon0 \
-    libgbm1 \
-    libpango-1.0-0 \
-    libcairo2 \
-    libatk1.0-0 \
-    libgdk-pixbuf2.0-0 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
