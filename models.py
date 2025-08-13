@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 import os
 
-# PostgreSQL için opsiyonel import
+# PostgreSQL için import
 try:
     import psycopg2
     from psycopg2.extras import RealDictCursor
@@ -16,29 +16,29 @@ except ImportError:
 
 def get_db_connection():
     """Database bağlantısı - Render PostgreSQL veya local SQLite"""
-    # Check if we're in Render environment and have DATABASE_URL
-    if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE and os.environ.get('DATABASE_URL'):
-        # Render PostgreSQL
-        print(f"[DEBUG] Render ortamında PostgreSQL kullanılıyor")
+    # Render ortamında PostgreSQL kullan
+    if os.environ.get('RENDER'):
         database_url = os.environ.get('DATABASE_URL')
-        print(f"[DEBUG] DATABASE_URL: {database_url[:20]}..." if database_url else "[DEBUG] DATABASE_URL yok")
-        
-        if database_url and database_url.startswith('postgres://'):
-            database_url = database_url.replace('postgres://', 'postgresql://', 1)
-            print(f"[DEBUG] URL güncellendi: {database_url[:20]}...")
-        
-        try:
-            print(f"[DEBUG] PostgreSQL bağlantısı kuruluyor...")
-            conn = psycopg2.connect(database_url)
-            print(f"[DEBUG] PostgreSQL bağlantısı başarılı")
-            return conn
-        except Exception as e:
-            print(f"[HATA] PostgreSQL bağlantı hatası: {e}")
-            print(f"[HATA] SQLite fallback kullanılıyor")
-            # Fallback to SQLite
-            return sqlite3.connect('wishya.db')
+        if database_url and PSYCOPG2_AVAILABLE:
+            print(f"[DEBUG] Render ortamında PostgreSQL kullanılıyor")
+            
+            # postgres:// -> postgresql:// dönüşümü
+            if database_url.startswith('postgres://'):
+                database_url = database_url.replace('postgres://', 'postgresql://', 1)
+                print(f"[DEBUG] URL güncellendi: postgresql://")
+            
+            try:
+                conn = psycopg2.connect(database_url)
+                print(f"[DEBUG] PostgreSQL bağlantısı başarılı")
+                return conn
+            except Exception as e:
+                print(f"[HATA] PostgreSQL bağlantı hatası: {e}")
+                raise e
+        else:
+            print(f"[HATA] Render ortamında DATABASE_URL veya psycopg2 bulunamadı")
+            raise Exception("Render ortamında PostgreSQL gerekli")
     else:
-        # Local SQLite veya PostgreSQL mevcut değilse
+        # Local ortamda SQLite kullan
         print(f"[DEBUG] Local ortamda SQLite kullanılıyor")
         return sqlite3.connect('wishya.db')
 
@@ -53,7 +53,8 @@ def init_db():
         print(f"[HATA] Database bağlantı hatası: {e}")
         raise
     
-    if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE and os.environ.get('DATABASE_URL'):
+    # Render ortamında PostgreSQL kullan
+    if os.environ.get('RENDER'):
         # PostgreSQL için tablo oluşturma
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
@@ -135,7 +136,7 @@ def init_db():
         ''')
         
     else:
-        # SQLite için tablo oluşturma
+        # Local SQLite için tablo oluşturma
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
                 id TEXT PRIMARY KEY,
@@ -221,8 +222,7 @@ def init_db():
 
 def get_placeholder():
     """Database placeholder'ını döndür (PostgreSQL: %s, SQLite: ?)"""
-    # Check if we're actually using PostgreSQL
-    if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE and os.environ.get('DATABASE_URL'):
+    if os.environ.get('RENDER'):
         return '%s'  # PostgreSQL
     else:
         return '?'   # SQLite
@@ -233,20 +233,14 @@ def execute_query(cursor, query, params=None):
         params = ()
     
     try:
-        # Check if we're actually using PostgreSQL
-        if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE and os.environ.get('DATABASE_URL'):
+        if os.environ.get('RENDER'):
             # PostgreSQL için parametreleri tuple'a çevir
             if isinstance(params, list):
                 params = tuple(params)
-            print(f"[DEBUG] PostgreSQL query: {query[:100]}...")
-            print(f"[DEBUG] PostgreSQL params: {params}")
             cursor.execute(query, params)
         else:
             # SQLite için parametreleri olduğu gibi kullan
-            print(f"[DEBUG] SQLite query: {query[:100]}...")
-            print(f"[DEBUG] SQLite params: {params}")
             cursor.execute(query, params)
-        print(f"[DEBUG] Query başarıyla çalıştırıldı")
     except Exception as e:
         print(f"[HATA] Query çalıştırma hatası: {e}")
         print(f"[HATA] Query: {query}")
@@ -255,7 +249,7 @@ def execute_query(cursor, query, params=None):
 
 def get_boolean_value(value):
     """Database için boolean değerini döndür"""
-    if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE and os.environ.get('DATABASE_URL'):
+    if os.environ.get('RENDER'):
         # PostgreSQL için True/False
         return True if value else False
     else:
@@ -867,7 +861,7 @@ class Notification:
             cursor = conn.cursor()
             placeholder = get_placeholder()
             
-            if os.environ.get('RENDER') and PSYCOPG2_AVAILABLE and os.environ.get('DATABASE_URL'):
+            if os.environ.get('RENDER'):
                 # PostgreSQL için LIMIT syntax
                 execute_query(cursor, f'''
                     SELECT * FROM notifications 

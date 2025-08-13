@@ -57,9 +57,11 @@ if os.environ.get('RENDER'):
     app.config['DATABASE_URL'] = os.environ.get('DATABASE_URL')
     if app.config['DATABASE_URL'] and app.config['DATABASE_URL'].startswith('postgres://'):
         app.config['DATABASE_URL'] = app.config['DATABASE_URL'].replace('postgres://', 'postgresql://', 1)
+    print(f"[DEBUG] Render PostgreSQL URL: {app.config['DATABASE_URL'][:30]}...")
 else:
     # Local SQLite configuration
     app.config['DATABASE_URL'] = 'sqlite:///wishya.db'
+    print(f"[DEBUG] Local SQLite URL: {app.config['DATABASE_URL']}")
 
 # Simple cache for scraping results (memory optimized for free plan)
 scraping_cache = {}
@@ -73,6 +75,7 @@ def cleanup_memory():
     if psutil.virtual_memory().percent > 80:
         scraping_cache.clear()
         gc.collect()
+    print(f"[DEBUG] Memory cleanup completed - Usage: {psutil.virtual_memory().percent}%")
 
 # File to store dynamically added brands
 BRANDS_FILE = "dynamic_brands.json"
@@ -893,6 +896,20 @@ def load_user(user_id):
 # Initialize database
 with app.app_context():
     init_db()
+
+# Health check endpoint
+@app.route('/health')
+def health_check():
+    """Health check endpoint for Render"""
+    try:
+        # Database bağlantısını test et
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT 1')
+        conn.close()
+        return jsonify({'status': 'healthy', 'database': 'connected'}), 200
+    except Exception as e:
+        return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
 
 BRANDS = [
     ("koton.com", "Koton"),
@@ -1786,6 +1803,21 @@ async def perform_scraping(url):
         print(f"[DEBUG] Cache'ten veri alındı: {url}")
         return cached_data
     
+    # Domain kontrolü
+    domain = extract_domain_from_url(url)
+    if not domain:
+        print(f"[HATA] Geçersiz URL: {url}")
+        return {
+            "id": str(uuid.uuid4()),
+            "url": url,
+            "name": "Geçersiz URL",
+            "price": "🤷",
+            "old_price": None,
+            "image": None,
+            "brand": "Bilinmiyor",
+            "sizes": []
+        }
+    
     # Hepsiburada için Selenium kullan
     if "hepsiburada.com" in url:
         print(f"[DEBUG] Hepsiburada için Selenium kullanılıyor")
@@ -1813,8 +1845,7 @@ async def perform_scraping(url):
     
     # Render'da headless mode kullan
     headless = True
-    if os.environ.get('RENDER') or os.environ.get('PORT'):
-        headless = True
+    print(f"[DEBUG] Browser headless mode: {headless}")
     
     try:
         async with async_playwright() as p:
@@ -1852,41 +1883,38 @@ async def perform_scraping(url):
                     '--no-first-run',
                     '--no-zygote',
                     '--disable-background-networking',
-                    # Render için ek optimizasyonlar
-                    '--disable-background-media-suspend',  # Arka plan medya askıya alma
-                    '--disable-background-timer-throttling',  # Arka plan zamanlayıcı kısıtlama
-                    '--disable-backgrounding-occluded-windows',  # Arka plan pencereleri
-                    '--disable-renderer-backgrounding',  # Renderer arka plan
-                    '--disable-features=TranslateUI',  # Çeviri UI'ı devre dışı bırak
-                    '--disable-ipc-flooding-protection',  # IPC taşma koruması
-                    '--disable-web-security',  # Web güvenliği
-                    '--disable-features=VizDisplayCompositor',  # VizDisplayCompositor
-                    '--disable-default-apps',  # Varsayılan uygulamalar
-                    '--disable-sync',  # Senkronizasyon
-                    '--disable-translate',  # Çeviri
-                    '--hide-scrollbars',  # Kaydırma çubuklarını gizle
-                    '--mute-audio',  # Sesi kapat
-                    '--no-default-browser-check',  # Varsayılan tarayıcı kontrolü
-                    '--no-pings',  # Ping'leri devre dışı bırak
-                    '--disable-prompt-on-repost',  # Yeniden gönderimde uyarı
-                    '--disable-hang-monitor',  # Asılma monitörü
-                    '--disable-client-side-phishing-detection',  # İstemci tarafı kimlik avı tespiti
-                    '--disable-component-update',  # Bileşen güncellemesi
-                    '--disable-domain-reliability',  # Alan adı güvenilirliği
-                    '--disable-features=AudioServiceOutOfProcess',  # Ses servisi
-                    '--disable-setuid-sandbox',  # Setuid sandbox
-                    '--disable-accelerated-2d-canvas',  # Hızlandırılmış 2D canvas
-                    '--no-first-run',  # İlk çalıştırma
-                    '--no-zygote',  # Zygote
-                    '--disable-background-networking',  # Arka plan ağ
+                    '--disable-background-media-suspend',
+                    '--memory-pressure-off',
+                    '--max_old_space_size=4096',
+                    '--single-process',
+                    '--disable-dev-shm-usage',
+                    '--disable-software-rasterizer',
+                    '--disable-background-networking',
+                    '--disable-default-apps',
+                    '--disable-extensions',
+                    '--disable-sync',
+                    '--disable-translate',
+                    '--hide-scrollbars',
+                    '--metrics-recording-only',
+                    '--mute-audio',
+                    '--no-first-run',
+                    '--safebrowsing-disable-auto-update',
+                    '--ignore-certificate-errors',
+                    '--ignore-ssl-errors',
+                    '--ignore-certificate-errors-spki-list',
+                    '--disable-web-security',
+                    '--allow-running-insecure-content',
+                    '--disable-features=VizDisplayCompositor',
+                    '--disable-ipc-flooding-protection'
                 ]
             )
+            print(f"[DEBUG] Browser başlatıldı")
             
             try:
                 # Context oluştur - Gelişmiş ayarlar
                 context = await browser.new_context(
-                    user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1",
-                    viewport={'width': 390, 'height': 844},
+                    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    viewport={'width': 1920, 'height': 1080},
                     locale='tr-TR',
                     timezone_id='Europe/Istanbul',
                     extra_http_headers={
@@ -1903,19 +1931,17 @@ async def perform_scraping(url):
                         'Cache-Control': 'max-age=0',
                         'DNT': '1',
                         'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
-                        'Sec-Ch-Ua-Mobile': '?1',
-                        'Sec-Ch-Ua-Platform': '"iPhone"',
+                        'Sec-Ch-Ua-Mobile': '?0',
+                        'Sec-Ch-Ua-Platform': '"Windows"',
                     }
                 )
+                print(f"[DEBUG] Context oluşturuldu")
                 
                 # Sayfa oluştur
                 page = await context.new_page()
                 
                 # Gelişmiş stealth script ekle
                 await page.add_init_script(get_advanced_stealth_script())
-                
-                # Site-specific navigation ve bekleme
-                await handle_site_specific_navigation(page, url)
                 
                 # Ürün sayfasına git
                 await navigate_to_product_page(page, url)
@@ -2001,190 +2027,7 @@ async def scrape_product(url):
     """Ana scraping fonksiyonu - Retry mekanizması ile"""
     return await retry_scraping(url, max_retries=3, base_delay=2)
 
-async def handle_site_specific_navigation(page, url):
-    """Site-specific navigation işlemleri"""
-    try:
-        if "mango.com" in url:
-            print(f"[DEBUG] Mango için gelişmiş bot koruması aşma başlıyor")
-            
-            # Mango ana sayfasına git ve cookie'leri kabul et
-            await page.goto("https://shop.mango.com/tr", wait_until="domcontentloaded", timeout=30000)
-            await page.wait_for_timeout(3000)
-            
-            # Cookie banner'ını kabul et (varsa)
-            try:
-                cookie_button = await page.query_selector('button[data-testid="cookie-banner-accept"], button:has-text("Kabul"), button:has-text("Accept"), button:has-text("OK")')
-                if cookie_button:
-                    await cookie_button.click()
-                    print(f"[DEBUG] Cookie banner kabul edildi")
-                    await page.wait_for_timeout(2000)
-            except:
-                pass
-            
-            # Sayfada biraz gezin
-            await page.mouse.move(100, 100)
-            await page.wait_for_timeout(1000)
-            await page.mouse.move(200, 200)
-            await page.wait_for_timeout(1000)
-            
-            # Scroll yap
-            await page.evaluate("window.scrollTo(0, 500)")
-            await page.wait_for_timeout(2000)
-            await page.evaluate("window.scrollTo(0, 0)")
-            await page.wait_for_timeout(1000)
-            
-            print(f"[DEBUG] Mango ana sayfası hazırlandı")
-            
-        elif "zara.com" in url:
-            print(f"[DEBUG] Zara için gelişmiş bot koruması aşma başlıyor")
-            
-            # Zara ana sayfasına git ve cookie'leri kabul et
-            await page.goto("https://www.zara.com/tr/", wait_until="domcontentloaded", timeout=30000)
-            await page.wait_for_timeout(5000)
-            
-            # Cookie banner'ını kabul et (varsa)
-            try:
-                cookie_button = await page.query_selector('button[data-testid="cookie-banner-accept"], button:has-text("Kabul"), button:has-text("Accept"), button:has-text("OK"), button:has-text("Aceptar"), button:has-text("Aceitar")')
-                if cookie_button:
-                    await cookie_button.click()
-                    print(f"[DEBUG] Zara cookie banner kabul edildi")
-                    await page.wait_for_timeout(3000)
-            except:
-                pass
-            
-            # Sayfada biraz gezin
-            await page.mouse.move(100, 100)
-            await page.wait_for_timeout(1000)
-            await page.mouse.move(200, 200)
-            await page.wait_for_timeout(1000)
-            
-            # Scroll yap
-            await page.evaluate("window.scrollTo(0, 500)")
-            await page.wait_for_timeout(2000)
-            await page.evaluate("window.scrollTo(0, 0)")
-            await page.wait_for_timeout(1000)
-            
-            # Ek insan benzeri davranışlar
-            await page.mouse.move(300, 300)
-            await page.wait_for_timeout(500)
-            await page.mouse.move(400, 400)
-            await page.wait_for_timeout(500)
-            
-            print(f"[DEBUG] Zara ana sayfası hazırlandı")
-        elif "bershka.com" in url:
-            print(f"[DEBUG] Bershka için gelişmiş bot koruması aşma başlıyor")
-            
-            # Bershka ana sayfasına git ve cookie'leri kabul et
-            await page.goto("https://www.bershka.com/tr/", wait_until="domcontentloaded", timeout=30000)
-            await page.wait_for_timeout(5000)
-            
-            # Cookie banner'ını kabul et (varsa)
-            try:
-                cookie_button = await page.query_selector('button[data-testid="cookie-banner-accept"], button:has-text("Kabul"), button:has-text("Accept"), button:has-text("OK"), button:has-text("Aceptar"), button:has-text("Aceitar"), button:has-text("Accept all"), button:has-text("Accept cookies")')
-                if cookie_button:
-                    await cookie_button.click()
-                    print(f"[DEBUG] Bershka cookie banner kabul edildi")
-                    await page.wait_for_timeout(3000)
-            except:
-                pass
-            
-            # Sayfada biraz gezin
-            await page.mouse.move(100, 100)
-            await page.wait_for_timeout(1000)
-            await page.mouse.move(200, 200)
-            await page.wait_for_timeout(1000)
-            
-            # Scroll yap
-            await page.evaluate("window.scrollTo(0, 500)")
-            await page.wait_for_timeout(2000)
-            await page.evaluate("window.scrollTo(0, 0)")
-            await page.wait_for_timeout(1000)
-            
-            # Ek insan benzeri davranışlar
-            await page.mouse.move(300, 300)
-            await page.wait_for_timeout(500)
-            await page.mouse.move(400, 400)
-            await page.wait_for_timeout(500)
-            
-            print(f"[DEBUG] Bershka ana sayfası hazırlandı")
-        elif "boyner.com.tr" in url:
-            await page.goto("https://www.boyner.com.tr/", wait_until="domcontentloaded", timeout=15000)
-            await page.wait_for_timeout(3000)
-        elif "pullandbear.com" in url:
-            print(f"[DEBUG] Pull&Bear için gelişmiş bot koruması aşma başlıyor")
-            
-            # Pull&Bear ana sayfasına git
-            await page.goto("https://www.pullandbear.com/tr/", wait_until="domcontentloaded", timeout=30000)
-            await page.wait_for_timeout(5000)
-            
-            # Cookie banner'ını kabul et (varsa)
-            try:
-                cookie_button = await page.query_selector('button[data-testid="cookie-banner-accept"], button:has-text("Kabul"), button:has-text("Accept"), button:has-text("OK"), button:has-text("Aceptar"), button:has-text("Aceitar")')
-                if cookie_button:
-                    await cookie_button.click()
-                    print(f"[DEBUG] Pull&Bear cookie banner kabul edildi")
-                    await page.wait_for_timeout(3000)
-            except:
-                pass
-            
-            # Sayfada biraz gezin
-            await page.mouse.move(100, 100)
-            await page.wait_for_timeout(1000)
-            await page.mouse.move(200, 200)
-            await page.wait_for_timeout(1000)
-            
-            # Scroll yap
-            await page.evaluate("window.scrollTo(0, 500)")
-            await page.wait_for_timeout(2000)
-            await page.evaluate("window.scrollTo(0, 0)")
-            await page.wait_for_timeout(1000)
-            
-            print(f"[DEBUG] Pull&Bear ana sayfası hazırlandı")
-        elif "lesbenjamins.com" in url:
-            await page.goto("https://lesbenjamins.com/", wait_until="domcontentloaded", timeout=15000)
-            await page.wait_for_timeout(3000)
-        elif "wwfmarket.com" in url:
-            await page.goto("https://wwfmarket.com/tr/", wait_until="domcontentloaded", timeout=15000)
-            await page.wait_for_timeout(3000)
-        elif "hm.com" in url:
-            print(f"[DEBUG] H&M için gelişmiş bot koruması aşma başlıyor")
-            
-            # H&M ana sayfasına git ve cookie'leri kabul et
-            await page.goto("https://www2.hm.com/tr_tr/", wait_until="domcontentloaded", timeout=30000)
-            await page.wait_for_timeout(5000)
-            
-            # Cookie banner'ını kabul et (varsa)
-            try:
-                cookie_button = await page.query_selector('button[data-testid="cookie-banner-accept"], button:has-text("Kabul"), button:has-text("Accept"), button:has-text("OK"), button:has-text("Aceptar"), button:has-text("Aceitar"), button:has-text("Accept all")')
-                if cookie_button:
-                    await cookie_button.click()
-                    print(f"[DEBUG] H&M cookie banner kabul edildi")
-                    await page.wait_for_timeout(3000)
-            except:
-                pass
-            
-            # Sayfada biraz gezin
-            await page.mouse.move(100, 100)
-            await page.wait_for_timeout(1000)
-            await page.mouse.move(200, 200)
-            await page.wait_for_timeout(1000)
-            
-            # Scroll yap
-            await page.evaluate("window.scrollTo(0, 500)")
-            await page.wait_for_timeout(2000)
-            await page.evaluate("window.scrollTo(0, 0)")
-            await page.wait_for_timeout(1000)
-            
-            # Ek insan benzeri davranışlar
-            await page.mouse.move(300, 300)
-            await page.wait_for_timeout(500)
-            await page.mouse.move(400, 400)
-            await page.wait_for_timeout(500)
-            
-            print(f"[DEBUG] H&M ana sayfası hazırlandı")
-    except Exception as e:
-        print(f"[DEBUG] Site-specific navigation hatası: {e}")
-        pass
+
 
 async def navigate_to_product_page(page, url):
     """Ürün sayfasına gitme işlemleri - Render optimized"""
@@ -2192,23 +2035,21 @@ async def navigate_to_product_page(page, url):
     
     # Genel ürün sayfası yükleme (tüm siteler için)
     try:
-        await page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        await page.goto(url, wait_until="domcontentloaded", timeout=45000)
         print(f"[DEBUG] Sayfa yüklendi, bekleniyor...")
-        await page.wait_for_timeout(3000)
+        await page.wait_for_timeout(2000)
         
         # Sayfanın tam yüklenmesini bekle
         try:
-            await page.wait_for_load_state("networkidle", timeout=30000)
+            await page.wait_for_load_state("networkidle", timeout=20000)
             print(f"[DEBUG] Network idle durumu beklendi")
         except:
             print(f"[DEBUG] Network idle timeout, devam ediliyor")
             pass
         
-        # Genel scroll ve mouse hareketleri
+        # Basit scroll
         await page.evaluate("window.scrollTo(0, 300)")
-        await page.wait_for_timeout(2000)
-        await page.evaluate("window.scrollTo(0, 600)")
-        await page.wait_for_timeout(2000)
+        await page.wait_for_timeout(1000)
         await page.evaluate("window.scrollTo(0, 0)")
         await page.wait_for_timeout(1000)
         
@@ -2216,198 +2057,19 @@ async def navigate_to_product_page(page, url):
     except Exception as e:
         print(f"[DEBUG] Genel sayfa yükleme hatası: {e}")
     
-    # Site-specific işlemler
-    if "pullandbear.com" in url:
-        print(f"[DEBUG] Pull&Bear ürün sayfasına gidiliyor...")
-        
-        # Pull&Bear ürün sayfasına git
-        await page.goto(url, wait_until="domcontentloaded", timeout=60000)
-        await page.wait_for_timeout(8000)  # Daha uzun bekleme
-        
-        # Sayfanın tam yüklenmesini bekle
-        try:
-            await page.wait_for_load_state("networkidle", timeout=30000)
-            print(f"[DEBUG] Pull&Bear network idle durumu beklendi")
-        except:
-            print(f"[DEBUG] Pull&Bear network idle timeout, devam ediliyor")
-            pass
-        
-        # Pull&Bear için ek insan benzeri davranışlar
-        await page.mouse.move(300, 300)
-        await page.wait_for_timeout(1000)
-        
-        # Sayfayı scroll et
-        await page.evaluate("window.scrollTo(0, 300)")
-        await page.wait_for_timeout(2000)
-        await page.evaluate("window.scrollTo(0, 600)")
-        await page.wait_for_timeout(2000)
-        await page.evaluate("window.scrollTo(0, 0)")
-        await page.wait_for_timeout(1000)
-        
-        # Mouse hareketleri
-        await page.mouse.move(400, 400)
-        await page.wait_for_timeout(500)
-        await page.mouse.move(500, 500)
-        await page.wait_for_timeout(500)
-        
-        # Görsel galerisini aktif et (varsa)
-        try:
-            gallery_button = await page.query_selector('[data-testid="gallery-button"], .gallery-button, .image-gallery button')
-            if gallery_button:
-                await gallery_button.click()
-                print(f"[DEBUG] Pull&Bear görsel galerisi aktif edildi")
-                await page.wait_for_timeout(3000)
-        except:
-            pass
-        
-        print(f"[DEBUG] Pull&Bear ürün sayfası hazırlandı")
-    elif "bershka.com" in url:
-        print(f"[DEBUG] Bershka ürün sayfasına gidiliyor...")
-        
-        # Bershka ürün sayfasına git
-        await page.goto(url, wait_until="domcontentloaded", timeout=60000)
-        await page.wait_for_timeout(8000)  # Daha uzun bekleme
-        
-        # Sayfanın tam yüklenmesini bekle
-        try:
-            await page.wait_for_load_state("networkidle", timeout=30000)
-            print(f"[DEBUG] Bershka network idle durumu beklendi")
-        except:
-            print(f"[DEBUG] Bershka network idle timeout, devam ediliyor")
-            pass
-        
-        # Bershka için ek insan benzeri davranışlar
-        await page.mouse.move(300, 300)
-        await page.wait_for_timeout(1000)
-        
-        # Sayfayı scroll et
-        await page.evaluate("window.scrollTo(0, 300)")
-        await page.wait_for_timeout(2000)
-        await page.evaluate("window.scrollTo(0, 600)")
-        await page.wait_for_timeout(2000)
-        await page.evaluate("window.scrollTo(0, 0)")
-        await page.wait_for_timeout(1000)
-        
-        # Mouse hareketleri
-        await page.mouse.move(400, 400)
-        await page.wait_for_timeout(500)
-        await page.mouse.move(500, 500)
-        await page.wait_for_timeout(500)
-        
-        # Bershka için özel görsel galerisi aktif etme (varsa)
-        try:
-            gallery_button = await page.query_selector('.product-gallery button, .image-gallery button, .carousel button, [data-testid="gallery-button"]')
-            if gallery_button:
-                await gallery_button.click()
-                print(f"[DEBUG] Bershka görsel galerisi aktif edildi")
-                await page.wait_for_timeout(3000)
-        except:
-            pass
-        
-        print(f"[DEBUG] Bershka ürün sayfası hazırlandı")
-    elif "mango.com" in url:
-        print(f"[DEBUG] Mango ürün sayfasına gidiliyor...")
-        
-        # Ürün sayfasına git
-        await page.goto(url, wait_until="domcontentloaded", timeout=60000)
-        await page.wait_for_timeout(5000)
-        
-        # Sayfanın tam yüklenmesini bekle
-        try:
-            await page.wait_for_load_state("networkidle", timeout=30000)
-        except:
-            pass
-        
-        # Mango için ek insan benzeri davranışlar
-        await page.mouse.move(300, 300)
-        await page.wait_for_timeout(1000)
-        
-        # Sayfayı scroll et
-        await page.evaluate("window.scrollTo(0, 300)")
-        await page.wait_for_timeout(2000)
-        await page.evaluate("window.scrollTo(0, 600)")
-        await page.wait_for_timeout(2000)
-        await page.evaluate("window.scrollTo(0, 0)")
-        await page.wait_for_timeout(1000)
-        
-        # Mouse hareketleri
-        await page.mouse.move(400, 400)
-        await page.wait_for_timeout(500)
-        await page.mouse.move(500, 500)
-        await page.wait_for_timeout(500)
-        
-        print(f"[DEBUG] Mango ürün sayfası hazırlandı")
-    elif "zara.com" in url:
-        print(f"[DEBUG] Zara ürün sayfasına gidiliyor...")
-        
-        # Zara ürün sayfasına git
-        await page.goto(url, wait_until="domcontentloaded", timeout=60000)
-        await page.wait_for_timeout(8000)  # Daha uzun bekleme
-        
-        # Sayfanın tam yüklenmesini bekle
-        try:
-            await page.wait_for_load_state("networkidle", timeout=30000)
-        except:
-            pass
-        
-        # Zara için ek insan benzeri davranışlar
-        await page.mouse.move(300, 300)
-        await page.wait_for_timeout(1000)
-        
-        # Sayfayı scroll et
-        await page.evaluate("window.scrollTo(0, 300)")
-        await page.wait_for_timeout(2000)
-        await page.evaluate("window.scrollTo(0, 600)")
-        await page.wait_for_timeout(2000)
-        await page.evaluate("window.scrollTo(0, 0)")
-        await page.wait_for_timeout(1000)
-        
-        # Mouse hareketleri
-        await page.mouse.move(400, 400)
-        await page.wait_for_timeout(500)
-        await page.mouse.move(500, 500)
-        await page.wait_for_timeout(500)
-        
-        # Bot koruması kontrolü
-        try:
-            page_title = await page.title()
-            if "Access Denied" in page_title or "403" in page_title or "Forbidden" in page_title:
-                print(f"[DEBUG] Zara bot koruması tespit edildi, daha uzun bekleniyor...")
-                await page.wait_for_timeout(15000)  # 15 saniye daha bekle
-                await page.reload()
-                await page.wait_for_timeout(8000)
-        except:
-            pass
-        
-        print(f"[DEBUG] Zara ürün sayfası hazırlandı")
-    elif "sahibinden.com" in url:
-        print(f"[DEBUG] Sahibinden.com ürün sayfasına gidiliyor...")
-        
-        # Sahibinden.com için özel ayarlar
-        await page.goto(url, wait_until="domcontentloaded", timeout=30000)
-        await page.wait_for_timeout(5000)  # Daha uzun bekleme
-        
-        # Sayfanın tam yüklenmesini bekle
-        try:
-            await page.wait_for_load_state("networkidle", timeout=15000)
-        except:
-            pass
-        
-        # Sahibinden.com için ek bekleme
+    # Site-specific işlemler (sadece kritik siteler için)
+    if "zara.com" in url:
+        print(f"[DEBUG] Zara için ek bekleme...")
         await page.wait_for_timeout(3000)
-        
-        # Bot koruması kontrolü
-        try:
-            page_title = await page.title()
-            if "BIR DAKIKA" in page_title:
-                print(f"[DEBUG] Sahibinden.com bot koruması tespit edildi, daha uzun bekleniyor...")
-                await page.wait_for_timeout(10000)  # 10 saniye daha bekle
-                await page.reload()
-                await page.wait_for_timeout(5000)
-        except:
-            pass
-        
-        print(f"[DEBUG] Sahibinden.com ürün sayfası hazırlandı")
+    elif "mango.com" in url:
+        print(f"[DEBUG] Mango için ek bekleme...")
+        await page.wait_for_timeout(3000)
+    elif "bershka.com" in url:
+        print(f"[DEBUG] Bershka için ek bekleme...")
+        await page.wait_for_timeout(3000)
+    elif "sahibinden.com" in url:
+        print(f"[DEBUG] Sahibinden.com için ek bekleme...")
+        await page.wait_for_timeout(3000)
     elif "hm.com" in url:
         print(f"[DEBUG] H&M ürün sayfasına gidiliyor...")
         
@@ -2465,9 +2127,25 @@ async def navigate_to_product_page(page, url):
         # Ek bekleme
         await page.wait_for_timeout(3000)
 
-async def extract_sizes(page, url, enhanced_selectors):
-    """Beden bilgilerini çekme işlemleri"""
+async def extract_sizes(page, url, site_config):
+    """Beden bilgilerini çekme işlemleri - Render optimized"""
     sizes = []
+    
+    # Site-specific beden çekme
+    if site_config and 'size_selectors' in site_config:
+        for selector in site_config['size_selectors']:
+            try:
+                size_elements = await page.query_selector_all(selector)
+                for element in size_elements:
+                    size_text = await element.text_content()
+                    if size_text and size_text.strip():
+                        sizes.append(size_text.strip())
+                if sizes:
+                    print(f"[DEBUG] Site-specific bedenler bulundu: {sizes}")
+                    break
+            except Exception as e:
+                print(f"[DEBUG] Size selector hatası {selector}: {e}")
+                continue
     
     # Columbia.com.tr ve Mudo.com.tr için özel filtreleme
     is_columbia = "columbia.com.tr" in url
@@ -2475,6 +2153,7 @@ async def extract_sizes(page, url, enhanced_selectors):
     
     # Gelişmiş selector'ları kullan
     domain = extract_domain_from_url(url)
+    enhanced_selectors = get_enhanced_selectors()
     if domain in enhanced_selectors and "size_selectors" in enhanced_selectors[domain]:
         selectors = enhanced_selectors[domain]["size_selectors"]
     else:
@@ -2547,181 +2226,55 @@ async def extract_sizes(page, url, enhanced_selectors):
     return sizes
 
 async def extract_enhanced_data(page, url):
-    """Gelişmiş veri çekme işlemleri"""
-    title = None
-    price = None
-    old_price = None
-    image = None
-    sizes = []
+    """Gelişmiş veri çekme işlemleri - Render optimized"""
+    print(f"[DEBUG] Gelişmiş veri çekme başlıyor: {url}")
     
-    # Gelişmiş selector'ları al
-    enhanced_selectors = get_enhanced_selectors()
-    
-    # Pull&Bear için özel selector'lar
-    if "pullandbear.com" in url:
-        enhanced_selectors["pullandbear.com"] = {
-            "title_selectors": [
-                'h1[data-testid="product-detail-name"]',
-                'h1.product-name',
-                'h1.title',
-                'h1',
-                '[data-testid="product-title"]',
-                '.product-title',
-                '.product-name'
-            ],
-            "price_selectors": [
-                '[data-testid="product-price"]',
-                '.product-price',
-                '.price',
-                '[data-testid="price"]',
-                '.current-price',
-                '.final-price'
-            ],
-            "image_selectors": [
-                # Pull&Bear özel görsel selector'ları
-                'img[data-testid="product-image"]',
-                'img[data-testid="product-detail-image"]',
-                'img.product-image',
-                'img.product-detail-image',
-                'img.main-image',
-                'img[class*="product"][class*="image"]',
-                'img[class*="main"][class*="image"]',
-                'img[class*="detail"][class*="image"]',
-                # Pull&Bear'ın özel class'ları
-                'img[class*="pdp"]',
-                'img[class*="gallery"]',
-                'img[class*="carousel"]',
-                'img[class*="slider"]',
-                # Genel selector'lar
-                'img[src*="product"]',
-                'img[src*="main"]',
-                'img[src*="detail"]',
-                'img[src*="image"]',
-                'img[src*="gallery"]',
-                'img[src*="pdp"]',
-                # Son çare
-                'img'
-            ],
-            "old_price_selectors": [
-                '[data-testid="product-old-price"]',
-                '.product-old-price',
-                '.old-price',
-                '.previous-price',
-                '.strike-price'
-            ],
-            "size_selectors": [
-                '[data-testid="size-selector"] button',
-                '.size-selector button',
-                '.size-option',
-                '.size-button',
-                'button[data-testid*="size"]'
-            ]
-        }
-    
-    # Bershka için özel selector'lar
-    if "bershka.com" in url:
-        enhanced_selectors["bershka.com"] = {
-            "title_selectors": [
-                'h1.product-name',
-                'h1.product-title',
-                'h1.title',
-                'h1',
-                '.product-name',
-                '.product-title',
-                '[data-testid="product-title"]',
-                '[data-testid="product-name"]'
-            ],
-            "price_selectors": [
-                '.product-price',
-                '.price',
-                '.current-price',
-                '.final-price',
-                '[data-testid="product-price"]',
-                '[data-testid="price"]',
-                '.product-price-current',
-                '.price-current'
-            ],
-            "image_selectors": [
-                # Bershka özel görsel selector'ları
-                'img.product-image',
-                'img.product-main-image',
-                'img.main-product-image',
-                'img[class*="product"][class*="image"]',
-                'img[class*="main"][class*="image"]',
-                'img[class*="detail"][class*="image"]',
-                # Bershka'ın özel class'ları
-                'img[class*="gallery"]',
-                'img[class*="carousel"]',
-                'img[class*="slider"]',
-                'img[class*="pdp"]',
-                # Genel selector'lar
-                'img[src*="product"]',
-                'img[src*="main"]',
-                'img[src*="detail"]',
-                'img[src*="image"]',
-                'img[src*="gallery"]',
-                'img[src*="pdp"]',
-                # Son çare
-                'img'
-            ],
-            "old_price_selectors": [
-                '.product-old-price',
-                '.old-price',
-                '.previous-price',
-                '.strike-price',
-                '.price-old',
-                '[data-testid="product-old-price"]'
-            ],
-            "size_selectors": [
-                '.size-selector button',
-                '.size-option',
-                '.size-button',
-                'button[data-testid*="size"]',
-                '.product-sizes button',
-                '.available-sizes button'
-            ]
-        }
-    
-    # Site-specific konfigürasyonu al
+    # Site-specific konfigürasyon al
     site_config = get_site_config(url)
-    if site_config:
-        print(f"[DEBUG] Site-specific konfigürasyon kullanılıyor")
-        site_title, site_price, site_old_price, site_image = await extract_with_site_config(page, url, site_config)
-    else:
-        site_title, site_price, site_old_price, site_image = None, None, None, None
     
     # Başlık çekme
-    title = await extract_title(page, url, enhanced_selectors, site_title)
-    
-    # Görsel çekme
-    image = await extract_image(page, url, enhanced_selectors, site_image)
+    title = await extract_title(page, url, site_config)
     
     # Fiyat çekme
-    price = await extract_price(page, url, enhanced_selectors, site_price)
+    price = await extract_price(page, url, site_config)
     
     # Eski fiyat çekme
-    old_price = await extract_old_price(page, url, enhanced_selectors, site_old_price)
+    old_price = await extract_old_price(page, url, site_config)
     
-    # Fiyatları karşılaştır ve doğrula
-    price, old_price = await compare_and_validate_prices(price, old_price)
+    # Görsel çekme
+    image = await extract_image(page, url, site_config)
     
-    # Beden bilgilerini çekme
-    sizes = await extract_sizes(page, url, enhanced_selectors)
+    # Beden bilgisi çekme
+    sizes = await extract_sizes(page, url, site_config)
     
     return title, price, old_price, image, sizes
+    
 
-async def extract_title(page, url, enhanced_selectors, site_title):
-    """Başlık çekme işlemleri"""
+
+async def extract_title(page, url, site_config):
+    """Başlık çekme işlemleri - Render optimized"""
     title = None
     
-    # Site-specific başlık varsa kullan
-    if site_title and site_title != "WWW.SAHIBINDEN.COM":
-        title = site_title
-        print(f"[DEBUG] Site-specific başlık kullanıldı: {title}")
-        return title
+    # Site-specific başlık çekme
+    if site_config and 'title_selectors' in site_config:
+        for selector in site_config['title_selectors']:
+            try:
+                title_element = await page.query_selector(selector)
+                if title_element:
+                    title = await title_element.text_content()
+                    if title and title.strip():
+                        title = title.strip().upper()
+                        title = re.sub(r'[^\w\s\-\.]', '', title)
+                        title = re.sub(r'\s+', ' ', title).strip()
+                        print(f"[DEBUG] Site-specific başlık bulundu: {title}")
+                        break
+            except Exception as e:
+                print(f"[DEBUG] Title selector hatası {selector}: {e}")
+                continue
     
     # Gelişmiş selector'ları kullan
     domain = extract_domain_from_url(url)
+    enhanced_selectors = get_enhanced_selectors()
     if domain in enhanced_selectors:
         selectors = enhanced_selectors[domain]["title_selectors"]
     else:
@@ -2758,17 +2311,34 @@ async def extract_title(page, url, enhanced_selectors, site_title):
     
     return title
 
-async def extract_image(page, url, enhanced_selectors, site_image):
+async def extract_image(page, url, site_config):
     """Görsel çekme işlemleri - Render optimized"""
     image = None
     
     print(f"[DEBUG] Görsel çekme başlıyor: {url}")
     
-    # Site-specific görsel varsa kullan
-    if site_image:
-        image = site_image
-        print(f"[DEBUG] Site-specific görsel kullanıldı: {image}")
-        return image
+    # Site-specific görsel çekme
+    if site_config and 'image_selectors' in site_config:
+        for selector in site_config['image_selectors']:
+            try:
+                img_element = await page.query_selector(selector)
+                if img_element:
+                    src = await img_element.get_attribute('src')
+                    if src and (any(ext in src.lower() for ext in ['.jpg', '.jpeg', '.webp', '.png'])):
+                        # Relative URL'yi absolute yap
+                        if src.startswith('//'):
+                            src = 'https:' + src
+                        elif src.startswith('/'):
+                            from urllib.parse import urlparse
+                            parsed = urlparse(url)
+                            src = f"{parsed.scheme}://{parsed.netloc}{src}"
+                        
+                        image = src
+                        print(f"[DEBUG] Site-specific görsel bulundu: {image}")
+                        break
+            except Exception as e:
+                print(f"[DEBUG] Image selector hatası {selector}: {e}")
+                continue
     
     # Pull&Bear için özel görsel çekme
     if "pullandbear.com" in url:
@@ -3226,6 +2796,7 @@ async def extract_image(page, url, enhanced_selectors, site_image):
     
     # Gelişmiş selector'ları kullan
     domain = extract_domain_from_url(url)
+    enhanced_selectors = get_enhanced_selectors()
     if domain in enhanced_selectors:
         selectors = enhanced_selectors[domain]["image_selectors"]
         print(f"[DEBUG] Domain-specific selector'lar kullanılıyor: {domain}")
@@ -3383,18 +2954,37 @@ async def extract_image(page, url, enhanced_selectors, site_image):
     
     return image
 
-async def extract_price(page, url, enhanced_selectors, site_price):
-    """Fiyat çekme işlemleri"""
+async def extract_price(page, url, site_config):
+    """Fiyat çekme işlemleri - Render optimized"""
     price = None
     
-    # Site-specific fiyat varsa kullan
-    if site_price:
-        price = str(site_price)
-        print(f"[DEBUG] Site-specific fiyat kullanıldı: {price}")
-        return price
+    # Site-specific fiyat çekme
+    if site_config and 'price_selectors' in site_config:
+        for selector in site_config['price_selectors']:
+            try:
+                price_element = await page.query_selector(selector)
+                if price_element:
+                    price_text = await price_element.text_content()
+                    if price_text and price_text.strip():
+                        price_text = price_text.strip()
+                        price_text = re.sub(r'[^\d,\.]', '', price_text)
+                        price_text = price_text.replace(',', '.')
+                        
+                        if re.match(r'^\d+\.?\d*$', price_text):
+                            price_num = float(price_text)
+                            if price_num >= 1000:
+                                price = f"{price_num:,.2f} TL".replace(',', 'X').replace('.', ',').replace('X', '.')
+                            else:
+                                price = f"{price_num:.2f} TL".replace('.', ',')
+                            print(f"[DEBUG] Site-specific fiyat bulundu: {price}")
+                            break
+            except Exception as e:
+                print(f"[DEBUG] Price selector hatası {selector}: {e}")
+                continue
     
     # Gelişmiş selector'ları kullan
     domain = extract_domain_from_url(url)
+    enhanced_selectors = get_enhanced_selectors()
     if domain in enhanced_selectors:
         selectors = enhanced_selectors[domain]["price_selectors"]
     else:
@@ -3516,15 +3106,33 @@ async def compare_and_validate_prices(current_price, old_price):
     
     return current_price, old_price
 
-async def extract_old_price(page, url, enhanced_selectors, site_old_price):
-    """Eski fiyat çekme işlemleri"""
+async def extract_old_price(page, url, site_config):
+    """Eski fiyat çekme işlemleri - Render optimized"""
     old_price = None
     
-    # Site-specific eski fiyat varsa kullan
-    if site_old_price:
-        old_price = str(site_old_price)
-        print(f"[DEBUG] Site-specific eski fiyat kullanıldı: {old_price}")
-        return old_price
+    # Site-specific eski fiyat çekme
+    if site_config and 'old_price_selectors' in site_config:
+        for selector in site_config['old_price_selectors']:
+            try:
+                old_price_element = await page.query_selector(selector)
+                if old_price_element:
+                    old_price_text = await old_price_element.text_content()
+                    if old_price_text and old_price_text.strip():
+                        old_price_text = old_price_text.strip()
+                        old_price_text = re.sub(r'[^\d,\.]', '', old_price_text)
+                        old_price_text = old_price_text.replace(',', '.')
+                        
+                        if re.match(r'^\d+\.?\d*$', old_price_text):
+                            old_price_num = float(old_price_text)
+                            if old_price_num >= 1000:
+                                old_price = f"{old_price_num:,.2f} TL".replace(',', 'X').replace('.', ',').replace('X', '.')
+                            else:
+                                old_price = f"{old_price_num:.2f} TL".replace('.', ',')
+                            print(f"[DEBUG] Site-specific eski fiyat bulundu: {old_price}")
+                            break
+            except Exception as e:
+                print(f"[DEBUG] Old price selector hatası {selector}: {e}")
+                continue
     
     # Genel eski fiyat selector'ları
     old_price_selectors = [
@@ -3618,16 +3226,7 @@ def index():
         return redirect(url_for("dashboard"))
     return render_template("index.html")
 
-@app.route("/health")
-def health_check():
-    """Health check endpoint for Render"""
-    try:
-        # Test database connection
-        conn = get_db_connection()
-        conn.close()
-        return jsonify({"status": "healthy", "database": "connected"}), 200
-    except Exception as e:
-        return jsonify({"status": "unhealthy", "error": str(e)}), 500
+
 
 @app.route("/test-scraping")
 def test_scraping():
@@ -3918,6 +3517,7 @@ def add_product():
     bulk_urls = request.form.get("bulk_urls")
     
     if product_url:
+        product_data = None  # Variable'ı önceden tanımla
         try:
             # Async scraping'i Flask context'inde çalıştır
             loop = asyncio.new_event_loop()
@@ -3927,7 +3527,7 @@ def add_product():
             finally:
                 loop.close()
                 
-                if product_data:
+            if product_data:
                     # Hepsiburada için özel alan adları
                     name = product_data.get('title') or product_data.get('name', '')
                     price = product_data.get('current_price') or product_data.get('price', '')
@@ -3954,8 +3554,6 @@ def add_product():
                         old_price
                     )
                     flash(f"Ürün eklendi: {name}", "success")
-                else:
-                    flash("Ürün verisi çekilemedi", "error")
         except Exception as e:
             flash("Ürün eklenirken hata oluştu", "error")
             print(f"[HATA] Ürün eklenirken hata: {e}")
@@ -3966,6 +3564,7 @@ def add_product():
         added_count = 0
         
         for url in urls:
+            product_data = None  # Variable'ı önceden tanımla
             try:
                 # Async scraping'i Flask context'inde çalıştır
                 loop = asyncio.new_event_loop()

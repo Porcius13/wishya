@@ -25,31 +25,15 @@ RUN apt-get update && apt-get install -y \
     curl \
     # Görsel çekme için ek bağımlılıklar
     libglib2.0-0 \
-    libnss3 \
     libcups2 \
     libdbus-1-3 \
     libatspi2.0-0 \
-    libdrm2 \
     libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
     libgbm1 \
-    libasound2 \
     libpango-1.0-0 \
     libcairo2 \
     libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libgtk-3-0 \
     libgdk-pixbuf2.0-0 \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
-
-# Install Google Chrome (headless only for production)
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -66,20 +50,14 @@ ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=false
 # Install Playwright browsers with explicit path and verification
 RUN playwright install chromium --with-deps && \
     playwright install-deps chromium && \
-    playwright install chromium && \
     ls -la /ms-playwright/ && \
     ls -la /ms-playwright/chromium-*/ && \
     test -f /ms-playwright/chromium-*/chrome-linux/chrome && \
     echo "Playwright browsers installed successfully" && \
-    echo "Chrome executable found at: $(find /ms-playwright -name chrome -type f)" && \
-    # Görsel çekme için ek test
-    python -c "from playwright.async_api import async_playwright; print('Playwright import successful')"
+    echo "Chrome executable found at: $(find /ms-playwright -name chrome -type f)"
 
 # Copy application code
 COPY . .
-
-# Verify Playwright installation
-RUN python check_playwright.py
 
 # Create necessary directories
 RUN mkdir -p /app/logs
@@ -103,5 +81,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 
 # Run the application with gunicorn optimized for free plan
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "120", "--keep-alive", "2", "--max-requests", "1000", "--max-requests-jitter", "100", "--preload", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "120", "--keep-alive", "2", "--max-requests", "1000", "--max-requests-jitter", "100", "--preload", "--worker-class", "sync", "app:app"]
 
