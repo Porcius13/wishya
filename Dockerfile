@@ -7,10 +7,8 @@ WORKDIR /app
 # Install system dependencies in one layer to reduce image size
 RUN apt-get update && apt-get install -y \
     wget \
-    gnupg \
+    curl \
     ca-certificates \
-    procps \
-    libxss1 \
     fonts-liberation \
     libasound2 \
     libatk-bridge2.0-0 \
@@ -22,8 +20,6 @@ RUN apt-get update && apt-get install -y \
     libxdamage1 \
     libxrandr2 \
     xdg-utils \
-    curl \
-    # Görsel çekme için ek bağımlılıklar
     libglib2.0-0 \
     libcups2 \
     libdbus-1-3 \
