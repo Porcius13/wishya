@@ -1,0 +1,2678 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - wıshya</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⭐</text></svg>">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- Stardos Stencil Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@400;700&display=swap');
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/product-cards.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-ui.css') }}">
+    <style>
+        :root {
+            /* Les Benjamins inspired color palette - Minimalist Black & White */
+            --bg-primary: #ffffff;
+            --bg-secondary: #fafafa;
+            --text-primary: #000000;
+            --text-secondary: #666666;
+            --border-color: #e5e5e5;
+            --accent-color: #000000;
+            --accent-hover: #333333;
+            --card-bg: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.05);
+            --success-bg: #f0f0f0;
+            --success-text: #000000;
+            --error-bg: #f0f0f0;
+            --error-text: #000000;
+            --gradient-primary: #000000;
+            --gradient-secondary: #000000;
+            --glass-bg: rgba(255, 255, 255, 1);
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #000000;
+            --bg-secondary: #0a0a0a;
+            --text-primary: #ffffff;
+            --text-secondary: #999999;
+            --border-color: #333333;
+            --accent-color: #ffffff;
+            --accent-hover: #cccccc;
+            --card-bg: #0a0a0a;
+            --shadow: rgba(255, 255, 255, 0.05);
+            --success-bg: #1a1a1a;
+            --success-text: #ffffff;
+            --error-bg: #1a1a1a;
+            --error-text: #ffffff;
+            --gradient-primary: #ffffff;
+            --gradient-secondary: #ffffff;
+            --glass-bg: rgba(0, 0, 0, 1);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Touch-friendly improvements */
+        button,
+        a,
+        input,
+        select,
+        textarea {
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            transition: background-color 0.3s, color 0.3s;
+            position: relative;
+            overflow-x: hidden;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 0;
+            transition: all 0.3s ease;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+        }
+
+        .logo {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 18px;
+            font-weight: 400;
+            text-decoration: none;
+            color: var(--text-primary);
+            letter-spacing: 0.05em;
+            transition: opacity 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .logo:hover {
+            opacity: 0.6;
+        }
+
+        .header-search {
+            flex: 1;
+            max-width: 600px;
+            margin: 0 40px;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .header-search input {
+            width: 100%;
+            padding: 12px 0;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+            background: transparent;
+            color: var(--text-primary);
+            transition: border-color 0.2s ease;
+            font-family: inherit;
+            font-weight: 400;
+        }
+
+        .header-search input:focus {
+            outline: none;
+            border-bottom-color: var(--text-primary);
+        }
+
+        .header-search input::placeholder {
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+        }
+
+        .header-search-btn {
+            background: transparent;
+            color: var(--text-primary);
+            border: none;
+            padding: 0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+            min-width: auto;
+        }
+
+        .header-search-btn:hover {
+            opacity: 0.6;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .header-search-btn:active {
+            transform: translateY(0);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            color: var(--text-primary);
+            border: none;
+            padding: 0;
+            font-size: 12px;
+            font-weight: 400;
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .nav-btn:hover {
+            opacity: 0.6;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid var(--glass-border);
+            padding: 12px 24px;
+            border-radius: 25px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+
+        .logout-btn:hover {
+            background: var(--gradient-secondary);
+            color: white;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(240, 147, 251, 0.3);
+        }
+
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 40px;
+        }
+
+        .welcome-section {
+            text-align: left;
+            margin-bottom: 60px;
+            padding: 0;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            position: relative;
+            overflow: visible;
+        }
+
+        .welcome-title {
+            font-size: 24px;
+            font-weight: 400;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .welcome-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Filter and Sort Bar - Les Benjamins Style */
+        .filter-sort-bar {
+            margin-bottom: 40px;
+            padding: 0;
+            border-bottom: 1px solid var(--border-color);
+            background: transparent;
+        }
+
+        .filter-sort-container {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            padding: 0 0 12px 0;
+            flex-wrap: wrap;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+        }
+
+        .filter-search-input,
+        .filter-select-minimal,
+        .filter-price-input {
+            padding: 0;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 11px;
+            font-weight: 400;
+            font-family: inherit;
+            transition: opacity 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            outline: none;
+        }
+
+        .filter-search-input {
+            min-width: 120px;
+            padding-bottom: 2px;
+        }
+
+        .filter-search-input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+        }
+
+        .filter-search-input:focus {
+            opacity: 1;
+        }
+
+        .select-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .select-wrapper::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 3px solid transparent;
+            border-right: 3px solid transparent;
+            border-top: 3px solid var(--text-primary);
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .filter-select-minimal {
+            cursor: pointer;
+            appearance: none;
+            background: transparent;
+            padding-right: 20px;
+            padding-bottom: 2px;
+            min-width: 80px;
+            position: relative;
+        }
+
+        .filter-select-minimal:hover {
+            opacity: 0.7;
+        }
+
+        .price-filter {
+            gap: 12px;
+        }
+
+        .filter-price-input {
+            width: 60px;
+            padding-bottom: 2px;
+            text-align: left;
+        }
+
+        .filter-price-input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+
+        .price-divider {
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 300;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .filter-sort-container {
+                gap: 20px;
+                padding-bottom: 16px;
+            }
+
+            .filter-item {
+                flex: 1;
+                min-width: 120px;
+            }
+
+            .filter-search-input {
+                width: 100%;
+            }
+
+            .filter-select-minimal {
+                width: 100%;
+            }
+
+            .price-filter {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .filter-price-input {
+                flex: 1;
+                width: auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .filter-sort-container {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 16px;
+            }
+
+            .filter-item {
+                width: 100%;
+            }
+        }
+
+        .profile-link {
+            display: inline-block;
+            background: var(--gradient-primary);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 15px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .profile-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Search and Filter Styles */
+        .search-filter-section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 20px 60px var(--shadow);
+            animation: fadeInUp 1s ease 0.2s both;
+        }
+
+        .search-filter-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 80px var(--shadow);
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 20px 16px 50px;
+            border: 2px solid var(--glass-border);
+            border-radius: 15px;
+            font-size: 16px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 8px 30px var(--shadow);
+            transform: translateY(-2px);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus-within .search-icon {
+            color: var(--accent-color);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 12px 20px;
+            border: 2px solid var(--glass-border);
+            border-radius: 15px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px var(--shadow);
+            min-width: 200px;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 8px 30px var(--shadow);
+            transform: translateY(-2px);
+        }
+
+        .filter-select option {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .price-range-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 8px 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .price-input {
+            width: 80px;
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            outline: none;
+        }
+
+        .price-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .price-separator {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .products-grid {
+            margin-top: 40px;
+            animation: fadeInUp 1s ease 0.4s both;
+        }
+
+        .view-btn {
+            flex: 1;
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--text-primary);
+            padding: 12px 20px;
+            border-radius: 0;
+            text-decoration: none;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 400;
+            transition: all 0.2s ease;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .view-btn:hover {
+            background: var(--text-primary);
+            color: var(--card-bg);
+        }
+
+        .delete-btn {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--text-primary);
+            padding: 0;
+            border-radius: 0;
+            font-size: 18px;
+            font-weight: 300;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 32px;
+            min-width: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-btn:hover {
+            background: var(--text-primary);
+            color: var(--card-bg);
+        }
+
+        .collection-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .add-to-collection-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 50%;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px var(--shadow);
+            min-height: 36px;
+            min-width: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .add-to-collection-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--shadow);
+            border-color: var(--accent-color);
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            min-width: 220px;
+            box-shadow: 0 20px 60px var(--shadow);
+            border-radius: 15px;
+            z-index: 1000;
+            top: 100%;
+            left: 0;
+            margin-top: 10px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 15px 20px;
+            border: none;
+            background: none;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .dropdown-item:hover {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .dropdown-item:first-child {
+            border-radius: 15px 15px 0 0;
+        }
+
+        .dropdown-item:last-child {
+            border-radius: 0 0 15px 15px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 100px 20px;
+            color: var(--text-secondary);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 60px var(--shadow);
+        }
+
+        .empty-state h3 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .empty-state p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+
+        /* Flash Messages - Minimal Les Benjamins Style */
+        .flash-messages {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 300px;
+            width: auto;
+            min-width: 200px;
+            pointer-events: none;
+        }
+
+        .flash-message {
+            padding: 12px 16px;
+            border-radius: 0;
+            margin-bottom: 0;
+            font-weight: 400;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            animation: slideInUp 0.3s ease;
+            pointer-events: auto;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-primary);
+            border-left: 2px solid var(--text-primary);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .flash-message.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(100px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .flash-success {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-left: 2px solid var(--text-primary);
+        }
+
+        .flash-error {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-left: 2px solid var(--text-primary);
+        }
+
+        .flash-warning {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-left: 2px solid var(--text-primary);
+        }
+
+        .flash-info {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-left: 2px solid var(--text-primary);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .theme-toggle {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            padding: 0;
+            font-size: 16px;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            opacity: 0.6;
+        }
+
+        .theme-icon {
+            transition: transform 0.3s ease;
+        }
+
+        [data-theme="dark"] .theme-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Profile Dropdown Styles */
+        .profile-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-btn {
+            background: transparent;
+            border: none;
+            padding: 0;
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .profile-btn:hover {
+            opacity: 0.6;
+        }
+
+        .profile-icon {
+            font-size: 16px;
+        }
+
+        .profile-name {
+            font-weight: 600;
+        }
+
+        .dropdown-arrow {
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .profile-dropdown.active .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .profile-dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: var(--card-bg);
+            min-width: 200px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 0;
+            z-index: 1000;
+            margin-top: 10px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .profile-dropdown-content.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 15px 20px;
+            border: none;
+            background: none;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .dropdown-item:hover {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: var(--glass-border);
+            margin: 8px 0;
+        }
+
+        .logout-item {
+            color: #ff4757;
+        }
+
+        /* New styles for tracking button */
+        .tracking-btn {
+            background: transparent;
+            border: 1px solid var(--text-primary);
+            padding: 12px 20px;
+            border-radius: 0;
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 44px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .tracking-btn:hover {
+            background: var(--text-primary);
+            color: var(--card-bg);
+        }
+
+        .tracking-btn.tracking-active {
+            background: var(--text-primary);
+            color: var(--card-bg);
+            border-color: var(--text-primary);
+        }
+
+        .tracking-text {
+            transition: all 0.3s ease;
+        }
+
+        .tracking-btn.tracking-active .tracking-text {
+            color: white;
+        }
+
+        .tracking-icon {
+            transition: all 0.3s ease;
+        }
+
+        .tracking-btn.tracking-active .tracking-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Notification Dropdown Styles */
+        .notification-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .notification-btn {
+            background: transparent;
+            border: none;
+            padding: 0;
+            font-size: 16px;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            color: var(--text-primary);
+        }
+
+        .notification-btn:hover {
+            opacity: 0.6;
+        }
+
+        .notification-icon {
+            font-size: 24px;
+            color: var(--text-primary);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .notification-content {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--card-bg);
+            min-width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 0;
+            z-index: 1000;
+            margin-top: 10px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .notification-content.show {
+            display: block;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .notification-header h3 {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--text-primary);
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .mark-all-read {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 0;
+            font-size: 10px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .mark-all-read:hover {
+            background: var(--text-primary);
+            color: var(--card-bg);
+        }
+
+        .notification-list {
+            padding: 15px 20px;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item .icon {
+            font-size: 20px;
+            color: var(--accent-color);
+        }
+
+        .notification-item .message {
+            font-size: 14px;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .notification-item .timestamp {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .notification-item.unread {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 12px 10px;
+        }
+
+        .no-notifications {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 0 15px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .header-search {
+                margin: 0 15px;
+                order: 3;
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .header-actions {
+                gap: 10px;
+            }
+
+            .nav-btn,
+            .logout-btn {
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+
+            .user-info {
+                font-size: 12px;
+            }
+
+            .main-content {
+                padding: 40px 15px;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 20px;
+            }
+
+            .welcome-title {
+                font-size: 28px;
+            }
+
+            .welcome-subtitle {
+                font-size: 16px;
+            }
+
+            .filter-controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .filter-select {
+                width: 100%;
+            }
+
+            .search-filter-section {
+                padding: 20px;
+            }
+
+            .product-card {
+                padding: 15px;
+            }
+
+            .product-info h3 {
+                font-size: 16px;
+            }
+
+            .product-info p {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-content {
+                padding: 0 10px;
+            }
+
+            .header-search {
+                margin: 0 10px;
+                margin-top: 10px;
+            }
+
+            .header-actions {
+                gap: 8px;
+            }
+
+            .nav-btn,
+            .logout-btn {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+
+            .user-info {
+                font-size: 11px;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .welcome-title {
+                font-size: 24px;
+            }
+
+            .welcome-subtitle {
+                font-size: 14px;
+            }
+
+            .welcome-section {
+                padding: 30px 20px;
+            }
+
+            .search-filter-section {
+                padding: 15px;
+            }
+
+            .search-input {
+                padding: 12px 16px 12px 40px;
+                font-size: 14px;
+            }
+
+            .product-card {
+                padding: 12px;
+            }
+
+            .product-info h3 {
+                font-size: 14px;
+            }
+
+            .product-info p {
+                font-size: 12px;
+            }
+
+            .product-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .product-actions a,
+            .product-actions button {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .header-content {
+                padding: 0 8px;
+            }
+
+            .header-search {
+                margin: 0 8px;
+                margin-top: 8px;
+            }
+
+            .header-actions {
+                gap: 6px;
+            }
+
+            .nav-btn,
+            .logout-btn {
+                padding: 5px 10px;
+                font-size: 10px;
+            }
+
+            .user-info {
+                font-size: 10px;
+            }
+
+            .main-content {
+                padding: 30px 10px;
+            }
+
+            .welcome-title {
+                font-size: 20px;
+            }
+
+            .welcome-subtitle {
+                font-size: 12px;
+            }
+
+            .welcome-section {
+                padding: 25px 15px;
+            }
+
+            .search-filter-section {
+                padding: 12px;
+            }
+
+            .product-card {
+                padding: 10px;
+            }
+
+            .product-info h3 {
+                font-size: 13px;
+            }
+
+            .product-info p {
+                font-size: 11px;
+            }
+        }
+
+        /* Eski fiyat üstü çizili stili */
+        .product-old-price {
+            color: var(--text-secondary);
+            text-decoration: line-through;
+            text-decoration-color: #ff6b6b;
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">wıshya</a>
+            <div class="header-search">
+                <input type="text" id="header-search-input" placeholder="LINK" autocomplete="off">
+                <button type="button" id="header-search-btn" class="header-search-btn" title="Ürün Ekle">➤</button>
+            </div>
+            <div class="header-actions">
+                <button id="theme-toggle" class="theme-toggle" title="Tema Değiştir">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                <div class="notification-dropdown">
+                    <button id="notification-btn" class="notification-btn" title="Bildirimler">
+                        <span class="notification-icon">🔔</span>
+                        <span id="notification-badge" class="notification-badge" style="display: none;">0</span>
+                    </button>
+                    <div class="notification-content" id="notification-content">
+                        <div class="notification-header">
+                            <h3>Bildirimler</h3>
+                            <button id="mark-all-read" class="mark-all-read">Tümünü Okundu İşaretle</button>
+                        </div>
+                        <div class="notification-list" id="notification-list">
+                            <div class="no-notifications">Henüz bildirim yok</div>
+                        </div>
+                    </div>
+                </div>
+                <a href="/collections" class="nav-btn">Koleksiyonlar</a>
+                <a href="/price-tracking" class="nav-btn">📊 Fiyat Takip</a>
+                <div class="profile-dropdown">
+                    <button class="profile-btn" id="profile-btn">
+                        <span class="profile-icon">👤</span>
+                        <span class="profile-name">{{ current_user.username }}</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div class="profile-dropdown-content" id="profile-dropdown">
+                        <a href="/profile" class="dropdown-item">👤 Hesabım</a>
+                        <a href="/profile/settings" class="dropdown-item">⚙️ Hesap Bilgilerim</a>
+                        <a href="/profile/preferences" class="dropdown-item">🎨 Tercihlerim</a>
+                        <a href="/profile/collections" class="dropdown-item">📁 Koleksiyonlarım</a>
+                        <a href="/profile/favorites" class="dropdown-item">❤️ Favorilerim</a>
+                        <a href="/admin/brands" class="dropdown-item">🏷️ Marka Yönetimi</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="/logout" class="dropdown-item logout-item">🚪 Çıkış Yap</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="welcome-section">
+            <h1 class="welcome-title">Merhaba, {{ current_user.username }}!</h1>
+            <p class="welcome-subtitle">Favori ürünlerinizi keşfedin</p>
+        </div>
+
+        {% if products %}
+        <!-- Filter and Sort Bar - Les Benjamins Style -->
+        <div class="filter-sort-bar">
+            <div class="filter-sort-container">
+                <div class="filter-item">
+                    <input type="text" id="product-search" class="filter-search-input" placeholder="Ara"
+                        autocomplete="off">
+                </div>
+                <div class="filter-item">
+                    <div class="select-wrapper">
+                        <select id="brand-filter" class="filter-select-minimal">
+                            <option value="">Tüm Markalar</option>
+                            {% set brands = products|map(attribute='brand')|unique|sort %}
+                            {% for brand in brands %}
+                            <option value="{{ brand }}">{{ brand }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-item">
+                    <div class="select-wrapper">
+                        <select id="sort-select" class="filter-select-minimal">
+                            <option value="newest">Yeni</option>
+                            <option value="oldest">Eski</option>
+                            <option value="price-low">Fiyat ↑</option>
+                            <option value="price-high">Fiyat ↓</option>
+                            <option value="name-asc">A-Z</option>
+                            <option value="name-desc">Z-A</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-item price-filter">
+                    <input type="number" id="min-price" class="filter-price-input" placeholder="Min" min="0"
+                        step="0.01">
+                    <span class="price-divider">—</span>
+                    <input type="number" id="max-price" class="filter-price-input" placeholder="Max" min="0"
+                        step="0.01">
+                </div>
+            </div>
+        </div>
+        <div class="products-grid">
+            {% for product in products %}
+            <div class="product-card" data-product-id="{{ product.id }}">
+                <div class="product-image-container">
+                    {% set product_images = product.images if product.images else ([product.image] if product.image else
+                    []) %}
+                    {% if product_images|length > 1 %}
+                    <div class="product-image-carousel" data-product-id="{{ product.id }}">
+                        <div class="carousel-images">
+                            {% for img in product_images %}
+                            <img src="{{ img }}" alt="{{ product.name }}"
+                                class="product-image {% if loop.index == 1 %}active{% endif %}"
+                                onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgwIiBoZWlnaHQ9IjI4MCIgdmlld0JveD0iMCAwIDI4MCAyODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyODAiIGhlaWdodD0iMjgwIiBmaWxsPSIjRjhGOEY4Ii8+CjxwYXRoIGQ9Ik0xNDAgMTQwTDEwMCAxMDBIMTgwTDE0MCAxNDBaIiBmaWxsPSIjQ0NDIi8+Cjx0ZXh0IHg9IjE0MCIgeT0iMTYwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiPkfDvHJzZWwgWXVrbMO8PC90ZXh0Pgo8L3N2Zz4K'">
+                            {% endfor %}
+                        </div>
+                        <div class="carousel-dots">
+                            {% for img in product_images %}
+                            <span class="carousel-dot {% if loop.index == 1 %}active{% endif %}"
+                                data-index="{{ loop.index - 1 }}"></span>
+                            {% endfor %}
+                        </div>
+                        <button class="carousel-prev" onclick="changeProductImage('{{ product.id }}', -1)">‹</button>
+                        <button class="carousel-next" onclick="changeProductImage('{{ product.id }}', 1)">›</button>
+                    </div>
+                    {% else %}
+                    <img src="{{ product.image }}" alt="{{ product.name }}" class="product-image"
+                        onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgwIiBoZWlnaHQ9IjI4MCIgdmlld0JveD0iMCAwIDI4MCAyODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyODAiIGhlaWdodD0iMjgwIiBmaWxsPSIjRjhGOEY4Ii8+CjxwYXRoIGQ9Ik0xNDAgMTQwTDEwMCAxMDBIMTgwTDE0MCAxNDBaIiBmaWxsPSIjQ0NDIi8+Cjx0ZXh0IHg9IjE0MCIgeT0iMTYwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiPkfDvHJzZWwgWXVrbMO8PC90ZXh0Pgo8L3N2Zz4K'">
+                    {% endif %}
+                    <div class="favorite-icon">
+                        <span class="heart">❤️</span>
+                    </div>
+                    <div class="tracking-alarm-icon" data-product-id="{{ product.id }}" title="Fiyat Takibi"
+                        onclick="togglePriceTracking('{{ product.id }}'); event.stopPropagation();">
+                        <span class="alarm-icon">🔔</span>
+                    </div>
+
+                </div>
+                <div class="product-info">
+                    <div class="product-brand">{{ product.brand }}</div>
+                    <h3 class="product-name">{{ product.name }}</h3>
+                    <div class="price-container">
+                        {% if product.old_price and product.old_price != product.price %}
+                        <div class="product-old-price">{{ product.old_price }}</div>
+                        {% endif %}
+                        <div class="product-price">{{ product.price }}</div>
+                        {% if product.discount_info %}
+                        <div class="product-discount-info">{{ product.discount_info }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="product-actions">
+                        <div class="action-row">
+                            <a href="{{ product.url }}" target="_blank" class="view-btn">Görüntüle</a>
+                        </div>
+                        <div class="action-buttons">
+                            <div class="collection-dropdown">
+                                <button type="button" class="add-to-collection-btn"
+                                    onclick="toggleDropdown('{{ product.id }}')" title="Koleksiyona Ekle">+</button>
+                                <div class="dropdown-content" id="dropdown-{{ product.id }}">
+                                    {% for collection in current_user.get_collections() %}
+                                    <button type="button" class="dropdown-item" data-collection-id="{{ collection.id }}"
+                                        data-product-id="{{ product.id }}"
+                                        data-collection-name="{{ collection.name }}">{{ collection.name }}</button>
+                                    {% endfor %}
+                                    <a href="/profile/collections" class="dropdown-item">+ Yeni Koleksiyon</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Delete Button - Sağ Alt Köşe -->
+                    <form method="POST" action="/delete_product/{{ product.id }}" class="delete-form-bottom-right">
+                        <button type="submit" class="delete-btn-bottom-right"
+                            onclick="return confirm('Bu ürünü silmek istediğinizden emin misiniz?')"
+                            title="Sil">×</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <h3>Henüz ürün eklemediniz</h3>
+            <p>Üst kısımdaki arama çubuğunu kullanarak ilk ürününüzü ekleyin</p>
+        </div>
+        {% endif %}
+    </main>
+
+    <script>
+        // Add product to collection (AJAX) - MUST be defined FIRST before HTML onclick uses it
+        window.addToCollection = function (collectionId, productId, collectionName) {
+            console.log('[DEBUG] addToCollection called:', { collectionId, productId, collectionName });
+
+            // Close dropdown
+            const dropdown = document.getElementById('dropdown-' + productId);
+            if (dropdown) {
+                dropdown.style.display = 'none';
+            }
+
+            // Show loading toast
+            if (typeof toast !== 'undefined') {
+                toast.info('Koleksiyona ekleniyor...');
+            }
+
+            const url = `/collections/${collectionId}/add_product/${productId}`;
+            console.log('[DEBUG] Sending request to:', url);
+
+            // Send AJAX request
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
+                .then(response => {
+                    console.log('[DEBUG] Response received:', {
+                        status: response.status,
+                        statusText: response.statusText,
+                        ok: response.ok
+                    });
+
+                    // Check response status
+                    if (response.status >= 200 && response.status < 300) {
+                        // Try to parse as JSON
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            return response.json().then(data => {
+                                console.log('[DEBUG] JSON response:', data);
+                                return { success: true, data: data };
+                            });
+                        } else {
+                            // Not JSON, probably HTML redirect (old behavior)
+                            console.log('[DEBUG] Non-JSON response, assuming success');
+                            return response.text().then(text => {
+                                return { success: true, data: { message: 'Ürün koleksiyona eklendi' } };
+                            });
+                        }
+                    } else {
+                        // Error response
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            return response.json().then(data => {
+                                console.log('[DEBUG] Error JSON response:', data);
+                                return { success: false, data: data };
+                            });
+                        } else {
+                            return response.text().then(text => {
+                                return { success: false, data: { error: `HTTP ${response.status}: ${response.statusText}` } };
+                            });
+                        }
+                    }
+                })
+                .then(result => {
+                    console.log('[DEBUG] Final result:', result);
+                    if (result && result.success) {
+                        if (typeof toast !== 'undefined') {
+                            toast.success(result.data.message || `Ürün "${collectionName}" koleksiyonuna eklendi!`);
+                        }
+                        // Reload page after a short delay to show updated state
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        if (typeof toast !== 'undefined') {
+                            toast.error(result.data.error || result.data.message || 'Bir hata oluştu');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('[DEBUG] Koleksiyona ekleme hatası:', error);
+                    if (typeof toast !== 'undefined') {
+                        toast.error('Bir hata oluştu. Lütfen tekrar deneyin.');
+                    }
+                });
+        };
+
+        // Header search functionality
+        const headerSearchInput = document.getElementById('header-search-input');
+        const headerSearchBtn = document.getElementById('header-search-btn');
+
+        function addProductFromHeader() {
+            if (!headerSearchInput) {
+                console.error('[HATA] Header search input bulunamadı');
+                return;
+            }
+
+            const url = headerSearchInput.value.trim();
+            if (!url) {
+                if (typeof toast !== 'undefined' && toast) {
+                    toast.warning('Lütfen bir URL girin');
+                } else {
+                    alert('Lütfen bir URL girin');
+                }
+                return;
+            }
+
+            // Basit URL validation
+            try {
+                const urlObj = new URL(url.startsWith('http') ? url : 'https://' + url);
+                if (!['http:', 'https:'].includes(urlObj.protocol)) {
+                    throw new Error('Geçersiz protokol');
+                }
+            } catch (e) {
+                if (typeof toast !== 'undefined' && toast) {
+                    toast.error('Geçersiz URL formatı. Lütfen geçerli bir link girin.');
+                } else {
+                    alert('Geçersiz URL formatı. Lütfen geçerli bir link girin.');
+                }
+                return;
+            }
+
+            // Loading state
+            const originalBtnContent = headerSearchBtn ? headerSearchBtn.innerHTML : '';
+            if (headerSearchBtn) {
+                headerSearchBtn.disabled = true;
+                if (typeof LoadingManager !== 'undefined' && LoadingManager) {
+                    LoadingManager.showButton(headerSearchBtn);
+                    headerSearchBtn.innerHTML = '<span class="spinner spinner-small"></span>';
+                } else {
+                    headerSearchBtn.innerHTML = '<span>Ekleniyor...</span>';
+                }
+            }
+
+            // Use fetch API instead of form submit for better error handling
+            if (typeof toast !== 'undefined' && toast) {
+                toast.info('Ürün ekleniyor...');
+            }
+
+            // Create form data
+            const formData = new FormData();
+            formData.append('product_url', url);
+
+            // Send POST request
+            fetch('/add_product', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+                redirect: 'follow'
+            })
+                .then(response => {
+                    console.log('[DEBUG] Response status:', response.status);
+                    console.log('[DEBUG] Response URL:', response.url);
+                    console.log('[DEBUG] Response type:', response.type);
+
+                    // Check content type
+                    const contentType = response.headers.get('content-type');
+                    console.log('[DEBUG] Content-Type:', contentType);
+
+                    // If redirect (status 302 or 301), reload page
+                    if (response.status === 302 || response.status === 301 || response.redirected) {
+                        console.log('[DEBUG] Redirect detected, reloading page');
+                        window.location.reload();
+                        return null;
+                    }
+
+                    // Try to parse as JSON if content-type is JSON
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json();
+                    } else {
+                        // If not JSON, it's probably HTML (redirect response)
+                        console.log('[DEBUG] Non-JSON response, reloading page');
+                        window.location.reload();
+                        return null;
+                    }
+                })
+                .then(data => {
+                    if (data) {
+                        console.log('[DEBUG] Response data:', data);
+                        if (data.success) {
+                            if (typeof toast !== 'undefined' && toast) {
+                                toast.success(data.message || 'Ürün başarıyla eklendi!');
+                            }
+                            // Reload page after a short delay
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
+                        } else {
+                            if (typeof toast !== 'undefined' && toast) {
+                                toast.error(data.error || 'Ürün eklenirken bir hata oluştu');
+                            }
+                            if (headerSearchBtn) {
+                                headerSearchBtn.disabled = false;
+                                headerSearchBtn.innerHTML = originalBtnContent;
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('[HATA] Ürün ekleme hatası:', error);
+                    if (headerSearchBtn) {
+                        headerSearchBtn.disabled = false;
+                        headerSearchBtn.innerHTML = originalBtnContent;
+                    }
+                    if (typeof toast !== 'undefined' && toast) {
+                        toast.error('Ürün eklenirken bir hata oluştu. Lütfen tekrar deneyin.');
+                    }
+                });
+        }
+
+        if (headerSearchBtn) {
+            headerSearchBtn.addEventListener('click', addProductFromHeader);
+        }
+
+        if (headerSearchInput) {
+            headerSearchInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    addProductFromHeader();
+                }
+            });
+        }
+
+
+        // Fiyat takibini aç/kapat - Global function (ÖNCE TANIMLA)
+        window.togglePriceTracking = function (productId) {
+            console.log('[DEBUG] togglePriceTracking called for product:', productId);
+            const alarmIcon = document.querySelector(`.tracking-alarm-icon[data-product-id="${productId}"]`);
+            if (!alarmIcon) {
+                console.error('[HATA] Alarm icon bulunamadı:', productId);
+                return;
+            }
+
+            const isTracked = alarmIcon.classList.contains('tracking-active');
+            console.log('[DEBUG] Current tracking status:', isTracked);
+
+            const url = isTracked
+                ? `/product/${productId}/remove-from-tracking`
+                : `/product/${productId}/add-to-tracking`;
+
+            console.log('[DEBUG] Sending request to:', url);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin'
+            })
+                .then(response => {
+                    console.log('[DEBUG] Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('[DEBUG] Response data:', data);
+                    if (data && data.success) {
+                        updateTrackingButton(productId, !isTracked);
+
+                        // Başarı mesajı göster
+                        showMessage(data.message || 'İşlem başarılı', 'success');
+                    } else {
+                        showMessage(data.message || data.error || 'İşlem başarısız', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('[HATA] Fiyat takip hatası:', error);
+                    showMessage('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                });
+        };
+
+        // Sayfa yüklendiğinde her ürünün takip durumunu kontrol et
+        document.addEventListener('DOMContentLoaded', function () {
+            const productCards = document.querySelectorAll('.product-card');
+
+            // Skeleton loader göster (eğer ürünler yoksa)
+            if (productCards.length === 0) {
+                const productsGrid = document.querySelector('.products-grid');
+                if (productsGrid) {
+                    SkeletonLoader.show(productsGrid, 6);
+                    // Simüle edilmiş yükleme (gerçek uygulamada API'den gelir)
+                    setTimeout(() => {
+                        SkeletonLoader.hide(productsGrid);
+                    }, 1000);
+                }
+            }
+
+            productCards.forEach((card, index) => {
+                const productId = card.dataset.productId;
+                checkTrackingStatus(productId);
+
+                // Fade-in animasyonu
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.4s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 50);
+            });
+
+            // Alarm icon'lara click event listener ekle
+            document.querySelectorAll('.tracking-alarm-icon').forEach(icon => {
+                icon.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const productId = this.getAttribute('data-product-id');
+                    console.log('[DEBUG] Alarm icon clicked for product:', productId);
+                    console.log('[DEBUG] togglePriceTracking available:', typeof window.togglePriceTracking);
+                    if (productId && window.togglePriceTracking) {
+                        window.togglePriceTracking(productId);
+                    } else {
+                        console.error('[HATA] Product ID:', productId, 'togglePriceTracking:', typeof window.togglePriceTracking);
+                    }
+                });
+            });
+        });
+
+        // Fiyat takip durumunu kontrol et
+        function checkTrackingStatus(productId) {
+            fetch(`/product/${productId}/tracking-status`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateTrackingButton(productId, data.is_tracked);
+                    }
+                })
+                .catch(error => {
+                    console.error('Takip durumu kontrol hatası:', error);
+                });
+        }
+
+        // Fiyat takip alarm simgesini güncelle
+        function updateTrackingButton(productId, isTracked) {
+            const alarmIcon = document.querySelector(`.tracking-alarm-icon[data-product-id="${productId}"]`);
+            if (!alarmIcon) return;
+
+            if (isTracked) {
+                alarmIcon.classList.add('tracking-active');
+                alarmIcon.title = 'Fiyat Takibi Aktif - Tıklayarak durdurun';
+            } else {
+                alarmIcon.classList.remove('tracking-active');
+                alarmIcon.title = 'Fiyat Takibi - Tıklayarak başlatın';
+            }
+        }
+
+
+        // Mesaj göster (toast kullan)
+        function showMessage(message, type) {
+            if (typeof toast !== 'undefined' && toast && typeof toast[type] === 'function') {
+                toast[type](message);
+            } else {
+                // Fallback: console log ve alert
+                console.log(`[${type.toUpperCase()}] ${message}`);
+                if (type === 'error') {
+                    alert(message);
+                }
+            }
+        }
+
+        // Collection dropdown functionality
+        function toggleDropdown(productId) {
+            console.log('[DEBUG] toggleDropdown called for product:', productId);
+            const dropdown = document.getElementById('dropdown-' + productId);
+            if (!dropdown) {
+                console.warn('[DEBUG] Dropdown not found for product:', productId);
+                return;
+            }
+
+            const allDropdowns = document.querySelectorAll('.dropdown-content');
+
+            // Close all other dropdowns
+            allDropdowns.forEach(d => {
+                if (d !== dropdown) {
+                    d.style.display = 'none';
+                    d.classList.remove('show');
+                }
+            });
+
+            // Toggle current dropdown
+            const isVisible = dropdown.style.display === 'block' || dropdown.style.display === 'flex';
+            console.log('[DEBUG] Dropdown visibility:', isVisible);
+
+            if (isVisible) {
+                dropdown.style.display = 'none';
+                dropdown.classList.remove('show');
+            } else {
+                dropdown.style.display = 'block';
+                // Small delay to allow display:block to apply before adding show class (for transition)
+                setTimeout(() => {
+                    dropdown.classList.add('show');
+                }, 10);
+                const items = dropdown.querySelectorAll('.dropdown-item[data-collection-id]');
+                console.log('[DEBUG] Dropdown opened with', items.length, 'collection items');
+
+                // Set up click handlers for each item (only once per item)
+                items.forEach((item, index) => {
+                    // Check if listener already added (using data attribute)
+                    if (item.dataset.listenerAdded === 'true') {
+                        console.log('[DEBUG] Listener already added to item:', index);
+                        return;
+                    }
+
+                    const collectionId = item.getAttribute('data-collection-id');
+                    const productIdAttr = item.getAttribute('data-product-id');
+                    const collectionName = item.getAttribute('data-collection-name') || item.textContent.trim();
+
+                    console.log('[DEBUG] Setting up listener for item:', index, collectionName);
+
+                    // Create click handler
+                    const handleClick = function (e) {
+                        console.log('[DEBUG] 🔥 Collection item clicked:', collectionName, 'Event phase:', e.eventPhase);
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+
+                        // Close dropdown
+                        dropdown.style.display = 'none';
+                        dropdown.classList.remove('show');
+
+                        // Call addToCollection
+                        console.log('[DEBUG] Calling addToCollection:', collectionId, productIdAttr, collectionName);
+                        if (typeof window.addToCollection === 'function') {
+                            window.addToCollection(collectionId, productIdAttr, collectionName);
+                        } else {
+                            console.error('[DEBUG] addToCollection function not found!');
+                        }
+
+                        return false;
+                    };
+
+                    // Add event listener in both capture and bubble phases to ensure we catch it
+                    item.addEventListener('click', handleClick, { once: false, capture: true });
+                    item.addEventListener('click', handleClick, { once: false, capture: false });
+
+                    // Mark as having listener
+                    item.dataset.listenerAdded = 'true';
+
+                    console.log('[DEBUG] ✅ Listener added to item:', index, collectionName);
+                });
+            }
+        }
+
+        // addToCollection function is already defined at the top of the script
+
+        // Close dropdowns when clicking outside (run in bubble phase, after item clicks)
+        document.addEventListener('click', function (e) {
+            // Check if click is on dropdown button or inside dropdown
+            const isDropdownButton = e.target.closest('.add-to-collection-btn');
+            const isInsideDropdown = e.target.closest('.dropdown-content');
+            const isDropdownItem = e.target.closest('.dropdown-item[data-collection-id]');
+
+            // Don't close if clicking on dropdown item - item's own listener handles it
+            if (isDropdownItem) {
+                console.log('[DEBUG] Click on dropdown item detected, not closing dropdown');
+                return;
+            }
+
+            // Close dropdowns if clicking outside
+            if (!isDropdownButton && !isInsideDropdown) {
+                const dropdowns = document.querySelectorAll('.dropdown-content');
+                dropdowns.forEach(dropdown => {
+                    dropdown.style.display = 'none';
+                    dropdown.classList.remove('show');
+                });
+            }
+        }, false); // Bubble phase - runs after capture phase listeners
+
+        // Profile dropdown functionality
+        const profileBtn = document.getElementById('profile-btn');
+        const profileDropdown = document.getElementById('profile-dropdown');
+
+        if (profileBtn && profileDropdown) {
+            profileBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                profileDropdown.classList.toggle('show');
+                profileBtn.classList.toggle('active');
+            });
+        }
+
+        // Close profile dropdown when clicking outside
+        document.addEventListener('click', function (e) {
+            if (profileDropdown && profileBtn && !e.target.closest('.profile-dropdown')) {
+                profileDropdown.classList.remove('show');
+                profileBtn.classList.remove('active');
+            }
+        });
+
+        // Dark mode functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.querySelector('.theme-icon');
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        if (themeIcon) {
+            updateThemeIcon(savedTheme);
+        }
+
+        // Theme toggle
+        if (themeToggle) {
+            themeToggle.addEventListener('click', function () {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                if (themeIcon) {
+                    updateThemeIcon(newTheme);
+                }
+            });
+        }
+
+        function updateThemeIcon(theme) {
+            if (!themeIcon) return;
+            if (theme === 'dark') {
+                themeIcon.textContent = '☀️';
+            } else {
+                themeIcon.textContent = '🌙';
+            }
+        }
+
+        // Search and Filter Functionality
+        const productSearch = document.getElementById('product-search');
+        const brandFilter = document.getElementById('brand-filter');
+        const sortSelect = document.getElementById('sort-select');
+        const minPriceInput = document.getElementById('min-price');
+        const maxPriceInput = document.getElementById('max-price');
+        let productCards = document.querySelectorAll('.product-card');
+
+        function filterAndSortProducts() {
+            if (!productCards || productCards.length === 0) {
+                productCards = document.querySelectorAll('.product-card');
+                if (!productCards || productCards.length === 0) return;
+            }
+
+            const searchTerm = productSearch ? productSearch.value.toLowerCase() : '';
+            const selectedBrand = brandFilter ? brandFilter.value.toLowerCase() : '';
+            const sortBy = sortSelect ? sortSelect.value : 'newest';
+            const minPrice = minPriceInput ? (parseFloat(minPriceInput.value) || 0) : 0;
+            const maxPrice = maxPriceInput ? (parseFloat(maxPriceInput.value) || Infinity) : Infinity;
+
+            console.log('Filtering and sorting:', { searchTerm, selectedBrand, sortBy, minPrice, maxPrice });
+
+            // Get all products and convert to array for sorting
+            let products = Array.from(productCards);
+
+            // Filter by search term
+            if (searchTerm) {
+                products = products.filter(card => {
+                    const name = card.querySelector('.product-name').textContent.toLowerCase();
+                    const brand = card.querySelector('.product-brand').textContent.toLowerCase();
+                    return name.includes(searchTerm) || brand.includes(searchTerm);
+                });
+            }
+
+            // Filter by brand
+            if (selectedBrand) {
+                products = products.filter(card => {
+                    const brand = card.querySelector('.product-brand').textContent.toLowerCase();
+                    return brand.includes(selectedBrand);
+                });
+            }
+
+            // Filter by price range
+            if (minPrice > 0 || maxPrice < Infinity) {
+                products = products.filter(card => {
+                    const priceText = card.querySelector('.product-price').textContent;
+                    const price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+                    return price >= minPrice && price <= maxPrice;
+                });
+            }
+
+            // Sort products
+            if (sortBy) {
+                products.sort((a, b) => {
+                    const nameA = a.querySelector('.product-name').textContent.toLowerCase();
+                    const nameB = b.querySelector('.product-name').textContent.toLowerCase();
+
+                    // Better price parsing
+                    const priceTextA = a.querySelector('.product-price').textContent;
+                    const priceTextB = b.querySelector('.product-price').textContent;
+                    const priceA = parseFloat(priceTextA.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+                    const priceB = parseFloat(priceTextB.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+
+                    switch (sortBy) {
+                        case 'name-asc':
+                            return nameA.localeCompare(nameB);
+                        case 'name-desc':
+                            return nameB.localeCompare(nameA);
+                        case 'price-low':
+                            return priceA - priceB;
+                        case 'price-high':
+                            return priceB - priceA;
+                        case 'newest':
+                            return 0; // Keep original order
+                        case 'oldest':
+                            return 0; // Will be reversed below
+                        default:
+                            return 0;
+                    }
+                });
+
+                // For oldest, reverse the array
+                if (sortBy === 'oldest') {
+                    products.reverse();
+                }
+            }
+
+            // Get the products grid container
+            const productsGrid = document.querySelector('.products-grid');
+
+            // Clear the grid
+            productsGrid.innerHTML = '';
+
+            // Add sorted and filtered products back to the grid
+            products.forEach(card => {
+                productsGrid.appendChild(card);
+            });
+
+            console.log('Filtered and sorted products:', products.length);
+        }
+
+        // Event listeners (with null checks)
+        if (productSearch) {
+            productSearch.addEventListener('input', filterAndSortProducts);
+        }
+        if (brandFilter) {
+            brandFilter.addEventListener('change', filterAndSortProducts);
+        }
+        if (sortSelect) {
+            sortSelect.addEventListener('change', filterAndSortProducts);
+        }
+        if (minPriceInput) {
+            minPriceInput.addEventListener('input', filterAndSortProducts);
+        }
+        if (maxPriceInput) {
+            maxPriceInput.addEventListener('input', filterAndSortProducts);
+        }
+
+        // Bildirim sistemi
+        const notificationBtn = document.getElementById('notification-btn');
+        const notificationContent = document.getElementById('notification-content');
+        const notificationBadge = document.getElementById('notification-badge');
+        const notificationList = document.getElementById('notification-list');
+        const markAllReadBtn = document.getElementById('mark-all-read');
+
+        // Null checks for notification elements
+        if (markAllReadBtn) {
+            markAllReadBtn.addEventListener('click', function () {
+                fetch('/notifications/mark-all-read', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadNotifications();
+                        }
+                    });
+            });
+        }
+
+        if (notificationBtn && notificationContent) {
+            notificationBtn.addEventListener('click', function () {
+                const isVisible = notificationContent.style.display === 'block';
+                notificationContent.style.display = isVisible ? 'none' : 'block';
+                if (!isVisible) {
+                    loadNotifications();
+                }
+            });
+        }
+
+        // Bildirimleri yükle
+        function loadNotifications() {
+            fetch('/notifications')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateNotificationBadge(data.unread_count);
+                        updateNotificationList(data.notifications);
+                    }
+                })
+                .catch(error => {
+                    console.error('Bildirim yükleme hatası:', error);
+                });
+        }
+
+        // Bildirim rozetini güncelle
+        function updateNotificationBadge(count) {
+            if (!notificationBadge) return;
+            if (count > 0) {
+                notificationBadge.textContent = count;
+                notificationBadge.style.display = 'flex';
+            } else {
+                notificationBadge.style.display = 'none';
+            }
+        }
+
+        // Bildirim listesini güncelle
+        function updateNotificationList(notifications) {
+            if (!notificationList) return;
+            if (notifications.length === 0) {
+                notificationList.innerHTML = '<div class="no-notifications">Henüz bildirim yok</div>';
+                return;
+            }
+
+            notificationList.innerHTML = '';
+            notifications.forEach(notification => {
+                const notificationItem = document.createElement('div');
+                notificationItem.className = `notification-item ${notification.is_read ? '' : 'unread'}`;
+                notificationItem.innerHTML = `
+                    <div class="icon">${getNotificationIcon(notification.type)}</div>
+                    <div class="content">
+                        <div class="message">${notification.message}</div>
+                        <div class="timestamp">${notification.timestamp}</div>
+                    </div>
+                `;
+                notificationList.appendChild(notificationItem);
+            });
+        }
+
+        // Bildirim ikonunu al
+        function getNotificationIcon(type) {
+            switch (type) {
+                case 'price_drop':
+                    return '📉';
+                case 'price_increase':
+                    return '📈';
+                case 'price_alert':
+                    return '🚨';
+                default:
+                    return '🔔';
+            }
+        }
+
+        // Bildirim dropdown'ını aç/kapat
+        if (notificationBtn && notificationContent) {
+            notificationBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                notificationContent.classList.toggle('show');
+                loadNotifications(); // Her açılışta bildirimleri yenile
+            });
+
+            // Dışarı tıklandığında kapat
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('.notification-dropdown')) {
+                    notificationContent.classList.remove('show');
+                }
+            });
+        }
+
+        // Tümünü okundu işaretle
+        if (markAllReadBtn) {
+            markAllReadBtn.addEventListener('click', function () {
+                fetch('/notifications/mark-all-read', {
+                    method: 'POST'
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadNotifications(); // Bildirimleri yenile
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Bildirim işaretleme hatası:', error);
+                    });
+            });
+        }
+
+        // Otomatik fiyat güncelleme ve bildirim kontrolü
+        function checkPriceUpdates() {
+            fetch('/price-tracking/update-prices', {
+                method: 'GET',
+                credentials: 'same-origin'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.success && data.notifications && data.notifications.length > 0) {
+                        // Yeni bildirimler varsa göster
+                        data.notifications.forEach(notification => {
+                            showToastNotification(notification.message, notification.type);
+                        });
+
+                        // Bildirim sayısını güncelle
+                        loadNotifications();
+                    }
+                })
+                .catch(error => {
+                    // Sadece connection refused değilse logla (uygulama çalışmıyorsa sessizce başarısız ol)
+                    if (error.message && !error.message.includes('Failed to fetch') && !error.message.includes('ERR_CONNECTION_REFUSED')) {
+                        console.error('Fiyat güncelleme hatası:', error);
+                    }
+                });
+        }
+
+        // Toast bildirimi göster
+        function showToastNotification(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast-notification toast-${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon">${getNotificationIcon(type)}</div>
+                <div class="toast-message">${message}</div>
+            `;
+
+            document.body.appendChild(toast);
+
+            // Animasyon için setTimeout
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+
+            // 5 saniye sonra kaldır
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 5000);
+        }
+
+        // Interval'leri sakla (memory leak önleme)
+        let priceUpdateInterval = null;
+        let notificationInterval = null;
+
+        // Sayfa yüklendiğinde bildirimleri yükle
+        document.addEventListener('DOMContentLoaded', function () {
+            loadNotifications();
+
+            // Flash message'ları animasyonlu göster
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach((message, index) => {
+                setTimeout(() => {
+                    message.classList.add('show');
+                }, index * 100);
+
+                // 5 saniye sonra otomatik kapat
+                setTimeout(() => {
+                    message.classList.remove('show');
+                    setTimeout(() => {
+                        if (message.parentElement) {
+                            message.remove();
+                        }
+                    }, 300);
+                }, 5000);
+            });
+
+            // Her 30 saniyede bir fiyat güncellemesi kontrol et
+            if (priceUpdateInterval) {
+                clearInterval(priceUpdateInterval);
+            }
+            priceUpdateInterval = setInterval(function () {
+                try {
+                    checkPriceUpdates();
+                } catch (error) {
+                    console.error('[HATA] Fiyat güncelleme kontrolü hatası:', error);
+                }
+            }, 30000);
+        });
+
+        // Sayfa kapatılırken interval'leri temizle (memory leak önleme)
+        window.addEventListener('beforeunload', function () {
+            if (priceUpdateInterval) {
+                clearInterval(priceUpdateInterval);
+            }
+            if (notificationInterval) {
+                clearInterval(notificationInterval);
+            }
+        });
+
+    </script>
+
+    <!-- Modern UI JavaScript -->
+    <script src="{{ url_for('static', filename='js/modern-ui.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/toast-debug.js') }}"></script>
+
+    <script>
+        // Modern UI entegrasyonu - headerSearchInput ve headerSearchBtn zaten yukarıda tanımlı
+        // Bu script bloğu sadece modern UI özelliklerini ekler, duplicate tanımlama yapmaz
+
+        // Ürün silme işlemini modern hale getir
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const form = this.closest('form');
+                const productCard = this.closest('.product-card');
+
+                ConfirmDialog.show('Bu ürünü silmek istediğinizden emin misiniz?', 'Ürün Sil')
+                    .then(confirmed => {
+                        if (confirmed) {
+                            ProductCardAnimations.remove(productCard, () => {
+                                form.submit();
+                            });
+                        }
+                    });
+            });
+        });
+
+        // Fiyat takibi iyileştirmeleri
+        // Fiyat takibi iyileştirmeleri
+        function togglePriceTracking(productId) {
+            // Find the icon container using the data-product-id attribute
+            const button = document.querySelector(`.tracking-alarm-icon[data-product-id="${productId}"]`);
+            if (!button) return;
+
+            const isTracked = button.classList.contains('tracking-active');
+
+            // Visual feedback
+            button.style.opacity = '0.5';
+
+            const url = isTracked
+                ? `/product/${productId}/remove-from-tracking`
+                : `/product/${productId}/add-to-tracking`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    button.style.opacity = ''; // Reset opacity
+                    if (data.success) {
+                        updateTrackingButton(productId, !isTracked);
+                        if (typeof toast !== 'undefined') {
+                            toast.success(data.message || (isTracked ? 'Fiyat takibi durduruldu' : 'Fiyat takibi başlatıldı'));
+                        }
+                    } else {
+                        if (typeof toast !== 'undefined') {
+                            toast.error(data.message || 'Bir hata oluştu');
+                        }
+                    }
+                })
+                .catch(error => {
+                    button.style.opacity = ''; // Reset opacity
+                    console.error('Fiyat takip hatası:', error);
+                    if (typeof toast !== 'undefined') {
+                        toast.error('Bir hata oluştu');
+                    }
+                });
+        }
+
+        function updateTrackingButton(productId, isTracked) {
+            const button = document.querySelector(`.tracking-alarm-icon[data-product-id="${productId}"]`);
+            if (!button) return;
+
+            if (isTracked) {
+                button.classList.add('tracking-active');
+                button.querySelector('.alarm-icon').textContent = '🔕';
+            } else {
+                button.classList.remove('tracking-active');
+                button.querySelector('.alarm-icon').textContent = '🔔';
+            }
+        }
+
+        // Mesaj göster fonksiyonunu toast ile değiştir
+        function showMessage(message, type) {
+            if (typeof toast !== 'undefined' && toast) {
+                toast[type](message);
+            } else {
+                console.warn('Toast manager not loaded');
+                alert(message); // Fallback
+            }
+        }
+
+        // Test toast on page load (for debugging)
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check if toast is available
+            if (typeof toast !== 'undefined' && toast) {
+                console.log('Toast manager loaded successfully');
+                // Uncomment to test:
+                // setTimeout(() => toast.success('Toast sistemi çalışıyor!'), 1000);
+            } else {
+                console.error('Toast manager not loaded!');
+            }
+        });
+
+        // Ürün ekleme başarılı olduğunda
+        {% if request.args.get('added') %}
+        if (typeof toast !== 'undefined') {
+            toast.success('Ürün başarıyla eklendi!');
+        }
+        {% endif %}
+
+        // Product Image Carousel Function
+        function changeProductImage(productId, direction) {
+            const carousel = document.querySelector(`.product-image-carousel[data-product-id="${productId}"]`);
+            if (!carousel) return;
+
+            const images = carousel.querySelectorAll('.carousel-images .product-image');
+            const dots = carousel.querySelectorAll('.carousel-dot');
+
+            if (images.length <= 1) return;
+
+            let currentIndex = 0;
+            images.forEach((img, index) => {
+                if (img.classList.contains('active')) {
+                    currentIndex = index;
+                }
+            });
+
+            // Remove active class from current image and dot
+            images[currentIndex].classList.remove('active');
+            dots[currentIndex].classList.remove('active');
+
+            // Calculate new index
+            let newIndex = currentIndex + direction;
+            if (newIndex < 0) {
+                newIndex = images.length - 1;
+            } else if (newIndex >= images.length) {
+                newIndex = 0;
+            }
+
+            // Add active class to new image and dot
+            images[newIndex].classList.add('active');
+            dots[newIndex].classList.add('active');
+        }
+
+        // Dot click handler
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.carousel-dot').forEach(dot => {
+                dot.addEventListener('click', function () {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    const carousel = this.closest('.product-image-carousel');
+                    if (!carousel) return;
+
+                    const productId = carousel.getAttribute('data-product-id');
+                    const images = carousel.querySelectorAll('.carousel-images .product-image');
+                    const dots = carousel.querySelectorAll('.carousel-dot');
+
+                    // Remove active from all
+                    images.forEach(img => img.classList.remove('active'));
+                    dots.forEach(d => d.classList.remove('active'));
+
+                    // Add active to selected
+                    if (images[index]) {
+                        images[index].classList.add('active');
+                        dots[index].classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+
+    <style>
+        /* Toast Notification Styles - Minimal Les Benjamins Style */
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 10000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            max-width: 300px;
+            font-size: 12px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .toast-notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-icon {
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .toast-message {
+            font-size: 11px;
+            color: var(--text-primary);
+            font-weight: 400;
+            line-height: 1.4;
+        }
+
+        .toast-success {
+            border-left: 2px solid var(--text-primary);
+        }
+
+        .toast-error {
+            border-left: 2px solid var(--text-primary);
+        }
+
+        .toast-warning {
+            border-left: 2px solid var(--text-primary);
+        }
+
+        .toast-info {
+            border-left: 2px solid var(--text-primary);
+        }
+
+        .toast-price_drop {
+            border-left: 2px solid var(--text-primary);
+        }
+
+        .toast-price_increase {
+            border-left: 2px solid var(--text-primary);
+        }
+
+        .toast-price_alert {
+            border-left: 2px solid var(--text-primary);
+        }
+
+        /* Notification item styles */
+        .notification-item .content {
+            flex: 1;
+        }
+
+        .notification-item .message {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .notification-item.unread .message {
+            font-weight: 700;
+        }
+    </style>
+</body>
+
+</html>

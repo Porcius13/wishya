@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fiyat Takibi - wıshya</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <!-- Stardos Stencil Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@400;700&display=swap');
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/les-benjamins-theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-ui.css') }}">
+    <style>
+        /* Les Benjamins Profile Tracking Page Specific Styles */
+        :root {
+            --bg-primary: #F3F9D2;
+            --bg-secondary: #CBEAA6;
+            --text-primary: #3D0B37;
+            --text-secondary: #63264A;
+            --border-color: #C0D684;
+            --accent-color: #3D0B37;
+            --accent-hover: #63264A;
+            --card-bg: #ffffff;
+            --shadow: rgba(61, 11, 55, 0.1);
+            --success-bg: #CBEAA6;
+            --success-text: #3D0B37;
+            --error-bg: #f8d7da;
+            --error-text: #721c24;
+            --gradient-primary: linear-gradient(135deg, #C0D684 0%, #CBEAA6 100%);
+            --gradient-secondary: linear-gradient(135deg, #63264A 0%, #3D0B37 100%);
+            --glass-bg: rgba(243, 249, 210, 0.95);
+            --glass-border: rgba(192, 214, 132, 0.3);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --border-color: #404040;
+            --accent-color: #ffffff;
+            --accent-hover: #e0e0e0;
+            --card-bg: rgba(45, 45, 45, 0.9);
+            --shadow: rgba(0, 0, 0, 0.3);
+            --success-bg: #1e4d2b;
+            --success-text: #4ade80;
+            --error-bg: #4d1e1e;
+            --error-text: #f87171;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --glass-bg: rgba(45, 45, 45, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 1000;
+            padding: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px var(--shadow);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 80px;
+        }
+
+        .logo {
+            font-family: 'Stardos Stencil', 'Courier New', monospace !important;
+            font-size: 28px;
+            font-weight: bold;
+            text-decoration: none;
+            color: var(--text-primary);
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 30px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: var(--glass-bg);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .page-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+
+        .tracking-summary {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 30px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .summary-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .tracking-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+
+        .tracking-item {
+            background: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .tracking-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px var(--shadow);
+        }
+
+        .item-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .item-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            background: var(--bg-secondary);
+            margin-bottom: 15px;
+        }
+
+        .item-brand {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .item-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .price-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .current-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .price-change {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .price-up {
+            background: var(--error-bg);
+            color: var(--error-text);
+        }
+
+        .price-down {
+            background: var(--success-bg);
+            color: var(--success-text);
+        }
+
+        .price-stable {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+        }
+
+        .item-details {
+            padding: 20px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .alert-price {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .view-btn {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .view-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .remove-btn {
+            background: var(--error-bg);
+            color: var(--error-text);
+        }
+
+        .remove-btn:hover {
+            background: var(--error-text);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--glass-bg);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .empty-text {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .add-btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: var(--accent-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .flash-messages {
+            margin-bottom: 30px;
+        }
+
+        .flash-message {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .flash-success {
+            background: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid rgba(195, 230, 203, 0.5);
+        }
+
+        .flash-error {
+            background: var(--error-bg);
+            color: var(--error-text);
+            border: 1px solid rgba(245, 198, 203, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 0 15px;
+            }
+
+            .main-content {
+                padding: 40px 15px;
+            }
+
+            .page-header {
+                padding: 20px;
+            }
+
+            .page-title {
+                font-size: 28px;
+            }
+
+            .tracking-summary {
+                gap: 20px;
+            }
+
+            .tracking-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">wıshya</a>
+            <div class="header-actions">
+                <a href="/dashboard" class="nav-btn">Dashboard</a>
+                <a href="/collections" class="nav-btn">Koleksiyonlar</a>
+                <a href="/profile" class="nav-btn">Profil</a>
+                <a href="/logout" class="nav-btn">Çıkış</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+            <h1 class="page-title">Fiyat Takibi</h1>
+            <p class="page-subtitle">Ürün fiyatlarını takip edin ve indirimleri kaçırmayın</p>
+            
+            <div class="tracking-summary">
+                <div class="summary-item">
+                    <div class="summary-number">{{ tracking_items|length }}</div>
+                    <div class="summary-label">Takip Edilen</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-number">0</div>
+                    <div class="summary-label">İndirim</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-number">0</div>
+                    <div class="summary-label">Zam</div>
+                </div>
+            </div>
+        </div>
+
+        {% if tracking_items %}
+            <div class="tracking-grid">
+                {% for item in tracking_items %}
+                    <div class="tracking-item">
+                        <div class="item-header">
+                            <img src="{{ item[4] }}" alt="{{ item[1] }}" class="item-image" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDI4MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyODAiIGhlaWdodD0iMTUwIiBmaWxsPSIjRjhGOEY4Ii8+CjxwYXRoIGQ9Ik0xNDAgNzVMMTAwIDM1SDE4MEwxNDAgNzVaIiBmaWxsPSIjQ0NDIi8+Cjx0ZXh0IHg9IjE0MCIgeT0iOTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCI+R8O8cnNlbCBZdWtsw7w8L3RleHQ+Cjwvc3ZnPgo='">
+                            <div class="item-brand">{{ item[2] }}</div>
+                            <h3 class="item-name">{{ item[1] }}</h3>
+                            
+                            <div class="price-info">
+                                <div class="current-price">{{ item[3] }}</div>
+                                {% set price_change = item[5]|float %}
+                                {% if price_change > 0 %}
+                                    <div class="price-change price-up">+{{ "%.2f"|format(price_change) }}₺</div>
+                                {% elif price_change < 0 %}
+                                    <div class="price-change price-down">{{ "%.2f"|format(price_change) }}₺</div>
+                                {% else %}
+                                    <div class="price-change price-stable">Değişim yok</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="item-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Orijinal Fiyat:</span>
+                                <span class="detail-value">{{ item[4] }}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Alarm Fiyatı:</span>
+                                <span class="detail-value alert-price">{{ item[7] if item[7] else 'Ayarlanmamış' }}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Son Kontrol:</span>
+                                <span class="detail-value">{{ item[9][:10] if item[9] else 'N/A' }}</span>
+                            </div>
+                            
+                            <div class="item-actions">
+                                <a href="{{ item[6] }}" target="_blank" class="action-btn view-btn">Görüntüle</a>
+                                <form method="POST" action="/tracking/remove/{{ item[0] }}" style="display: inline;">
+                                    <button type="submit" class="action-btn remove-btn" onclick="return confirm('Bu ürünün fiyat takibini durdurmak istediğinizden emin misiniz?')">Durdur</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📊</div>
+                <h3 class="empty-title">Fiyat takibi başlatmadınız</h3>
+                <p class="empty-text">Ürünlerinizin fiyatlarını takip ederek indirimleri kaçırmayın</p>
+                <a href="/dashboard" class="add-btn">Ürün Ekle</a>
+            </div>
+        {% endif %}
+    </main>
+</body>
+</html> 

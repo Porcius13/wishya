@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: wıshya
+    env: python
+    buildCommand: |
+      pip install -r requirements.txt
+      playwright install chromium
+      playwright install-deps chromium
+      playwright install-deps
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 300 --max-requests 1000 --max-requests-jitter 100 --preload
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: RENDER
+        value: true
+      - key: DISPLAY
+        value: ":99"
+      - key: PLAYWRIGHT_BROWSERS_PATH
+        value: "/opt/playwright"
+      - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
+        value: "0"
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHONUNBUFFERED
+        value: "1"
+    healthCheckPath: /
+    autoDeploy: true

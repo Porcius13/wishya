@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Koleksiyonlar - wıshya</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⭐</text></svg>">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <!-- Stardos Stencil Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@400;700&display=swap');
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-ui.css') }}">
+    <style>
+        :root {
+            /* Les Benjamins inspired color palette - Minimalist Black & White */
+            --bg-primary: #ffffff;
+            --bg-secondary: #fafafa;
+            --text-primary: #000000;
+            --text-secondary: #666666;
+            --border-color: #e5e5e5;
+            --accent-color: #000000;
+            --accent-hover: #333333;
+            --card-bg: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.05);
+            --glass-bg: rgba(255, 255, 255, 1);
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #000000;
+            --bg-secondary: #0a0a0a;
+            --text-primary: #ffffff;
+            --text-secondary: #999999;
+            --border-color: #333333;
+            --accent-color: #ffffff;
+            --accent-hover: #cccccc;
+            --card-bg: #0a0a0a;
+            --shadow: rgba(255, 255, 255, 0.05);
+            --glass-bg: rgba(0, 0, 0, 1);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            transition: background-color 0.3s, color 0.3s;
+            position: relative;
+            overflow-x: hidden;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 0;
+            transition: all 0.3s ease;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 80px;
+        }
+
+        .logo {
+            font-family: 'Stardos Stencil', 'Courier New', monospace !important;
+            font-size: 24px;
+            font-weight: 700;
+            text-decoration: none;
+            color: var(--text-primary);
+            letter-spacing: 0.15em;
+            transition: all 0.3s ease;
+            text-transform: lowercase;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            color: var(--text-secondary);
+            border: none;
+            padding: 0;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .nav-btn:hover {
+            opacity: 0.6;
+        }
+
+        .create-btn {
+            background: var(--accent-color);
+            color: var(--bg-primary);
+            border: none;
+            padding: 12px 24px;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .create-btn:hover {
+            opacity: 0.8;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            opacity: 0.6;
+        }
+
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 40px;
+        }
+
+        .page-header {
+            text-align: left;
+            margin-bottom: 60px;
+            padding: 0;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 400;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .collections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .collection-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 0;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .collection-card:hover {
+            border-color: var(--text-primary);
+        }
+
+        .collection-header {
+            padding: 32px 28px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .collection-type {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+        }
+
+        .collection-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            line-height: 1.3;
+        }
+
+        .collection-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .collection-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .collection-count {
+            font-weight: 600;
+        }
+
+        .collection-date {
+            opacity: 0.7;
+        }
+
+        .collection-actions {
+            padding: 20px 28px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .view-btn {
+            flex: 1;
+            background: var(--accent-color);
+            color: var(--bg-primary);
+            border: none;
+            padding: 14px 20px;
+            text-decoration: none;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .view-btn:hover {
+            opacity: 0.8;
+        }
+
+        .delete-btn {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            padding: 14px 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .delete-btn:hover {
+            border-color: var(--text-primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 120px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h3 {
+            font-size: 24px;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 400;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            margin-bottom: 40px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .create-first-btn {
+            background: var(--accent-color);
+            color: var(--bg-primary);
+            border: none;
+            padding: 15px 30px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .create-first-btn:hover {
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 0 20px;
+            }
+
+            .header-actions {
+                gap: 20px;
+            }
+
+            .nav-links {
+                gap: 20px;
+            }
+
+            .nav-btn {
+                font-size: 12px;
+            }
+
+            .main-content {
+                padding: 40px 20px;
+            }
+
+            .collections-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .collection-header {
+                padding: 24px 20px;
+            }
+
+            .collection-actions {
+                padding: 16px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-content {
+                padding: 0 15px;
+            }
+
+            .main-content {
+                padding: 30px 15px;
+            }
+
+            .collection-actions {
+                flex-direction: column;
+            }
+
+            .delete-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">wıshya</a>
+            <div class="header-actions">
+                <nav class="nav-links">
+                    <a href="/dashboard" class="nav-btn">ANASAYFA</a>
+                    <a href="/collections" class="nav-btn">KOLEKSİYONLAR</a>
+                    <a href="/price-tracking" class="nav-btn">FİYAT TAKİBİ</a>
+                    <a href="/profile" class="nav-btn">PROFİL</a>
+                    <a href="/logout" class="nav-btn">ÇIKIŞ</a>
+                </nav>
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">KOLEKSİYONLAR</h1>
+            <p class="page-subtitle">Ürünlerinizi organize edin ve koleksiyonlar oluşturun</p>
+            <a href="/collections/create" class="create-btn">+ YENİ KOLEKSİYON</a>
+        </div>
+
+        {% if collections %}
+        <div class="collections-grid">
+            {% for collection in collections %}
+            <div class="collection-card">
+                <div class="collection-header">
+                    <div class="collection-type">
+                        {{ collection.type }}
+                    </div>
+                    <h3 class="collection-name">{{ collection.name }}</h3>
+                    {% if collection.description %}
+                    <p class="collection-description">{{ collection.description }}</p>
+                    {% endif %}
+                    <div class="collection-meta">
+                        <span class="collection-count">{{ collection.product_count }} ÜRÜN</span>
+                        <span class="collection-date">{{ collection.created_at[:10] if collection.created_at else 'N/A'
+                            }}</span>
+                    </div>
+                </div>
+                <div class="collection-actions">
+                    <a href="/collections/{{ collection.id }}" class="view-btn">GÖRÜNTÜLE</a>
+                    <form method="POST" action="/collections/{{ collection.id }}/delete"
+                        style="display: inline; flex: 0;">
+                        <button type="submit" class="delete-btn"
+                            onclick="return confirm('Bu koleksiyonu silmek istediğinizden emin misiniz?')">SİL</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <h3>HENÜZ KOLEKSİYON YOK</h3>
+            <p>İlk koleksiyonunuzu oluşturarak ürünlerinizi organize etmeye başlayın</p>
+            <a href="/collections/create" class="create-first-btn">İLK KOLEKSİYONUMU OLUŞTUR</a>
+        </div>
+        {% endif %}
+    </main>
+
+    <script>
+        // Dark mode functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.querySelector('.theme-icon');
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        if (themeIcon) updateThemeIcon(savedTheme);
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', function () {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                if (themeIcon) updateThemeIcon(newTheme);
+            });
+        }
+
+        function updateThemeIcon(theme) {
+            if (!themeIcon) return;
+            themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+    </script>
+</body>
+
+</html>

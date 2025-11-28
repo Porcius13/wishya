@@ -1,0 +1,711 @@
+/* Les Benjamins Inspired Product Cards CSS - Minimalist Black & White Design */
+:root {
+    --card-bg: #ffffff;
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --card-shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --text-primary: #000000;
+    --text-secondary: #666666;
+    --price-color: #000000;
+    --old-price-color: #999999;
+    --brand-color: #000000;
+    --border-radius: 0;
+    --transition: all 0.2s ease;
+}
+
+[data-theme="dark"] {
+    --card-bg: #000000;
+    --card-shadow: 0 1px 3px rgba(255, 255, 255, 0.05);
+    --card-shadow-hover: 0 2px 8px rgba(255, 255, 255, 0.1);
+    --text-primary: #ffffff;
+    --text-secondary: #999999;
+    --price-color: #ffffff;
+    --old-price-color: #666666;
+    --brand-color: #ffffff;
+}
+
+/* Products Grid - Les Benjamins Style */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 40px;
+    padding: 0;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Product Card - Minimalist Les Benjamins Style */
+.product-card {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+    overflow: visible;
+    transition: var(--transition);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 20px;
+    gap: 20px;
+}
+
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow-hover);
+    border-color: var(--text-primary);
+}
+
+/* Image Container - Large Images Like Les Benjamins */
+.product-image-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+    background: #f5f5f5;
+    margin: 0;
+}
+
+.product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: var(--transition);
+}
+
+.product-card:hover .product-image {
+    transform: scale(1.02);
+}
+
+/* Product Image Carousel - Minimalist */
+.product-image-carousel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.carousel-images {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.carousel-images .product-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.carousel-images .product-image.active {
+    opacity: 1;
+    position: relative;
+}
+
+.carousel-dots {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 10;
+}
+
+.carousel-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.carousel-dot.active {
+    background: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+.carousel-prev,
+.carousel-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 24px;
+    font-weight: 300;
+    line-height: 1;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+    opacity: 0;
+    z-index: 20;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.carousel-prev {
+    left: 12px;
+}
+
+.carousel-next {
+    right: 12px;
+}
+
+.product-image-container:hover .carousel-prev,
+.product-image-container:hover .carousel-next,
+.product-image-carousel:hover .carousel-prev,
+.product-image-carousel:hover .carousel-next,
+.product-card:hover .carousel-prev,
+.product-card:hover .carousel-next {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.carousel-prev:hover,
+.carousel-next:hover {
+    background: var(--text-primary);
+    color: var(--card-bg);
+    border-color: var(--text-primary);
+    opacity: 1 !important;
+}
+
+[data-theme="dark"] .carousel-dot {
+    background: rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .carousel-dot.active {
+    background: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+[data-theme="dark"] .carousel-prev,
+[data-theme="dark"] .carousel-next {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+}
+
+/* Image Fallback */
+.product-image-container::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    background: #e5e5e5;
+    border-radius: 50%;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.product-image-container:has(img[src*="data:image/svg+xml"])::before {
+    opacity: 1;
+}
+
+/* Favorite Icon - Minimalist */
+.favorite-icon {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    z-index: 15;
+}
+
+/* Tracking Alarm Icon - Minimalist (Sol Üst) */
+.tracking-alarm-icon {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    z-index: 15;
+    opacity: 0.7;
+    pointer-events: auto;
+    user-select: none;
+}
+
+.tracking-alarm-icon:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 1);
+}
+
+.tracking-alarm-icon.tracking-active {
+    opacity: 1;
+    background: rgba(255, 255, 255, 1);
+    border-color: var(--text-primary);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.tracking-alarm-icon .alarm-icon {
+    font-size: 16px;
+    color: var(--text-primary);
+    pointer-events: none;
+}
+
+.tracking-alarm-icon.tracking-active .alarm-icon {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { 
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% { 
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+.favorite-icon:hover {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 1);
+}
+
+.favorite-icon .heart {
+    font-size: 14px;
+    color: #000000;
+}
+
+[data-theme="dark"] .favorite-icon {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .favorite-icon .heart {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .tracking-alarm-icon {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .tracking-alarm-icon.tracking-active {
+    background: rgba(0, 0, 0, 0.9);
+    border-color: var(--text-primary);
+}
+
+[data-theme="dark"] .tracking-alarm-icon .alarm-icon {
+    color: #ffffff;
+}
+
+/* Product Info - Minimalist */
+.product-info {
+    padding: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Brand - Uppercase Minimalist */
+.product-brand {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--brand-color);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 8px;
+    opacity: 0.8;
+}
+
+/* Product Name - Clean Typography */
+.product-name {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Price Container - Minimalist */
+.price-container {
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.product-price {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--price-color);
+    letter-spacing: 0.02em;
+}
+
+.product-old-price {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--old-price-color);
+    text-decoration: line-through;
+    text-decoration-color: var(--old-price-color);
+    letter-spacing: 0.02em;
+}
+
+.product-discount-info {
+    font-size: 11px;
+    font-weight: 400;
+    color: #ff4444;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-top: 4px;
+    padding: 4px 8px;
+    background: rgba(255, 68, 68, 0.1);
+    border: 1px solid rgba(255, 68, 68, 0.3);
+    display: inline-block;
+    width: fit-content;
+}
+
+[data-theme="dark"] .product-discount-info {
+    color: #ff6666;
+    background: rgba(255, 102, 102, 0.15);
+    border-color: rgba(255, 102, 102, 0.4);
+}
+
+/* Actions - Minimalist Buttons */
+.product-actions {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.action-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.action-row .view-btn {
+    width: 100%;
+}
+
+/* Buttons - Les Benjamins Style (Minimalist) */
+.view-btn {
+    flex: 1;
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--text-primary);
+    padding: 12px 20px;
+    border-radius: 0;
+    font-size: 12px;
+    font-weight: 400;
+    text-decoration: none;
+    text-align: center;
+    transition: var(--transition);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.view-btn:hover {
+    background: var(--text-primary);
+    color: var(--card-bg);
+}
+
+.tracking-btn {
+    flex: 1;
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--text-primary);
+    padding: 12px 20px;
+    border-radius: 0;
+    font-size: 12px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.tracking-btn:hover {
+    background: var(--text-primary);
+    color: var(--card-bg);
+}
+
+.tracking-btn.tracking-active {
+    background: var(--text-primary);
+    color: var(--card-bg);
+}
+
+.tracking-btn.tracking-active:hover {
+    background: var(--text-secondary);
+    border-color: var(--text-secondary);
+}
+
+/* Action Buttons - Minimalist */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.add-to-collection-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--text-primary);
+    border-radius: 0;
+    font-size: 18px;
+    font-weight: 300;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: var(--text-primary);
+}
+
+.add-to-collection-btn:hover {
+    background: var(--text-primary);
+    color: var(--card-bg);
+}
+
+/* Delete Button - Sağ Alt Köşe */
+.delete-form-bottom-right {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    margin: 0;
+    padding: 0;
+    z-index: 10;
+}
+
+.delete-btn-bottom-right {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--text-primary);
+    border-radius: 0;
+    font-size: 20px;
+    font-weight: 300;
+    line-height: 1;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--text-primary);
+    backdrop-filter: blur(10px);
+    padding: 0;
+    margin: 0;
+}
+
+.delete-btn-bottom-right:hover {
+    background: var(--text-primary);
+    color: var(--card-bg);
+    transform: scale(1.1);
+}
+
+[data-theme="dark"] .delete-btn-bottom-right {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .delete-btn-bottom-right:hover {
+    background: var(--text-primary);
+    color: var(--card-bg);
+}
+
+/* Dropdown - Minimalist */
+.collection-dropdown {
+    position: relative;
+}
+
+.dropdown-content {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: var(--transition);
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 4px;
+}
+
+.dropdown-content.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    background: none;
+    color: var(--text-primary);
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+    transition: var(--transition);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item:hover {
+    background: var(--bg-secondary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 30px;
+        padding: 0;
+    }
+    
+    .product-card {
+        padding: 16px;
+        gap: 16px;
+    }
+    
+    .product-image-container {
+        height: 350px;
+    }
+    
+    .product-info {
+        padding: 0;
+    }
+    
+    .product-name {
+        font-size: 13px;
+    }
+    
+    .product-price {
+        font-size: 15px;
+    }
+    
+    .product-actions {
+        gap: 8px;
+    }
+    
+    .view-btn,
+    .tracking-btn {
+        padding: 10px 16px;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    .products-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        padding: 0;
+    }
+    
+    .product-card {
+        padding: 16px;
+        gap: 16px;
+    }
+    
+    .product-image-container {
+        height: 300px;
+    }
+    
+    .product-info {
+        padding: 0;
+    }
+    
+    .action-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .view-btn,
+    .tracking-btn {
+        width: 100%;
+    }
+}
+
+/* Loading Animation */
+.product-card.loading {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Empty State - Minimalist */
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-state h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.empty-state p {
+    font-size: 12px;
+    line-height: 1.5;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}

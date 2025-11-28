@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yeni Koleksiyon Oluştur - wıshya</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+
+    <!-- Stardos Stencil Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/les-benjamins-theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-ui.css') }}">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 1000;
+            padding: 0;
+            box-shadow: 0 8px 32px var(--shadow);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 80px;
+        }
+
+        .logo {
+            font-family: 'Stardos Stencil', 'Courier New', monospace !important;
+            font-size: 28px;
+            font-weight: bold;
+            text-decoration: none;
+            color: var(--text-primary);
+            letter-spacing: 2px;
+        }
+
+        .nav-btn {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            border: 2px solid var(--glass-border);
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-color);
+        }
+
+        .main-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        .form-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 60px var(--shadow);
+            padding: 40px;
+        }
+
+        .form-header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .form-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 2px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.5);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .form-check-input {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--accent-color);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .flash-messages {
+            margin-bottom: 30px;
+        }
+
+        .flash-message {
+            padding: 16px 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 8px 30px var(--shadow);
+        }
+
+        .flash-success {
+            background: rgba(212, 237, 218, 0.9);
+            color: var(--success-text);
+            border: 2px solid rgba(195, 230, 203, 0.5);
+        }
+
+        .flash-error {
+            background: rgba(248, 215, 218, 0.9);
+            color: var(--error-text);
+            border: 2px solid rgba(245, 198, 203, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">wıshya</a>
+            <div style="display: flex; gap: 20px;">
+                <a href="/dashboard" class="nav-btn">Dashboard</a>
+                <a href="/profile/collections" class="nav-btn">Koleksiyonlar</a>
+                <a href="/logout" class="nav-btn">Çıkış</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="form-card">
+            <div class="form-header">
+                <h1 class="form-title">Yeni Koleksiyon Oluştur</h1>
+            </div>
+
+            <form method="POST" action="{{ url_for('collections_ui.create') }}">
+                <div class="form-group">
+                    <label for="name" class="form-label">Koleksiyon Adı</label>
+                    <input type="text" class="form-control" id="name" name="name" required
+                        placeholder="Örn: Yazlık Kıyafetler">
+                </div>
+
+                <div class="form-group">
+                    <label for="description" class="form-label">Açıklama (İsteğe bağlı)</label>
+                    <textarea class="form-control" id="description" name="description" rows="3"
+                        placeholder="Koleksiyonunuz hakkında kısa bir açıklama..."></textarea>
+                </div>
+
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="is_public" name="is_public" checked>
+                    <label class="form-check-label" for="is_public">Herkese Açık (Profilinizde görünür)</label>
+                </div>
+
+                <div class="form-actions">
+                    <a href="{{ url_for('profile.collections') }}" class="btn btn-secondary">İptal</a>
+                    <button type="submit" class="btn btn-primary">Oluştur</button>
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+
+</html>

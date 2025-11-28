@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ collection.name }} - wıshya</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+
+    <!-- Stardos Stencil Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/les-benjamins-theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-ui.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/product-cards.css') }}">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 1000;
+            padding: 0;
+            box-shadow: 0 8px 32px var(--shadow);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 80px;
+        }
+
+        .logo {
+            font-family: 'Stardos Stencil', 'Courier New', monospace !important;
+            font-size: 28px;
+            font-weight: bold;
+            text-decoration: none;
+            color: var(--text-primary);
+            letter-spacing: 2px;
+        }
+
+        .nav-btn {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            border: 2px solid var(--glass-border);
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-color);
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        .collection-header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: 1px solid var(--glass-border);
+            padding: 40px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .collection-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .collection-desc {
+            font-size: 16px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        .collection-meta {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .collection-actions {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-danger {
+            background: rgba(255, 68, 68, 0.1);
+            color: #ff4444;
+            border: 1px solid rgba(255, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 68, 68, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn-share {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--accent-color);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-share:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            background: var(--glass-bg);
+            border-radius: 25px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .remove-product-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #ff4444;
+            font-size: 18px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .product-card:hover .remove-product-btn {
+            opacity: 1;
+        }
+
+        .remove-product-btn:hover {
+            background: #ff4444;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .collection-actions {
+                position: static;
+                margin-top: 20px;
+            }
+
+            .collection-header {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">wıshya</a>
+            <div style="display: flex; gap: 20px;">
+                <a href="/dashboard" class="nav-btn">Dashboard</a>
+                <a href="/profile/collections" class="nav-btn">Koleksiyonlar</a>
+                <a href="/logout" class="nav-btn">Çıkış</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="collection-header">
+            <h1 class="collection-title">{{ collection.name }}</h1>
+            <p class="collection-desc">{{ collection.description or 'Açıklama yok' }}</p>
+            <div class="collection-actions">
+                <button onclick="shareCollection()" class="action-btn btn-share">
+                    🔗 Paylaş
+                </button>
+                <form action="{{ url_for('collections_ui.delete', collection_id=collection.id) }}" method="POST"
+                    onsubmit="return confirm('Bu koleksiyonu silmek istediğinizden emin misiniz?');"
+                    style="display: inline;">
+                    <button type="submit" class="action-btn btn-danger">
+                        🗑️ Sil
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        {% if products %}
+        <div class="products-grid">
+            {% for product in products %}
+            <div class="product-card" data-product-id="{{ product.id }}">
+                <button onclick="removeFromCollection('{{ collection.id }}', '{{ product.id }}')"
+                    class="remove-product-btn" title="Koleksiyondan Çıkar">×</button>
+
+                <div class="product-image-container">
+                    <img src="{{ product.image }}" alt="{{ product.name }}" class="product-image">
+                    {% if product.discount_percentage %}
+                    <div class="discount-badge">%{{ product.discount_percentage }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="product-info">
+                    <div class="product-brand">{{ product.brand }}</div>
+                    <h3 class="product-name">{{ product.name }}</h3>
+
+                    <div class="price-container">
+                        <span class="product-price">{{ product.price }}</span>
+                        {% if product.old_price %}
+                        <span class="product-old-price">{{ product.old_price }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="product-actions">
+                        <a href="{{ product.url }}" target="_blank" class="view-btn">ÜRÜNE GİT</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div style="font-size: 48px; margin-bottom: 20px;">🛍️</div>
+            <h3>Bu koleksiyonda henüz ürün yok</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Dashboard üzerinden ürün eklemeye
+                başlayabilirsiniz.</p>
+            <a href="/dashboard" class="action-btn btn-share" style="display: inline-block;">Dashboard'a Git</a>
+        </div>
+        {% endif %}
+    </main>
+
+    <script>
+        function shareCollection() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Koleksiyon linki kopyalandı!');
+            });
+        }
+
+        function removeFromCollection(collectionId, productId) {
+            if (!confirm('Bu ürünü koleksiyondan çıkarmak istediğinizden emin misiniz?')) return;
+
+            fetch(`/collections/${collectionId}/remove_product/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove card from DOM with animation
+                        const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
+                        if (card) {
+                            card.style.transition = 'all 0.3s ease';
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.9)';
+                            setTimeout(() => {
+                                card.remove();
+                                // Reload if empty to show empty state
+                                if (document.querySelectorAll('.product-card').length === 0) {
+                                    location.reload();
+                                }
+                            }, 300);
+                        }
+                    } else {
+                        alert('Hata: ' + (data.error || 'İşlem başarısız'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Bir hata oluştu');
+                });
+        }
+    </script>
+</body>
+
+</html>
