@@ -5,10 +5,15 @@ Flask uygulaması için Vercel serverless function
 import sys
 import os
 
-# Add kataloggia-main/kataloggia-main directory to path
+# Add current directory to path
 current_dir = os.path.dirname(os.path.abspath(__file__))
-kataloggia_dir = os.path.join(current_dir, 'kataloggia-main')
-sys.path.insert(0, kataloggia_dir)
+sys.path.insert(0, current_dir)
+
+# Try to import from kataloggia-main/app if it exists
+kataloggia_app_dir = os.path.join(current_dir, 'kataloggia-main', 'app')
+if os.path.exists(kataloggia_app_dir):
+    kataloggia_dir = os.path.join(current_dir, 'kataloggia-main')
+    sys.path.insert(0, kataloggia_dir)
 
 try:
     from app import create_app
