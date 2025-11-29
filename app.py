@@ -15,6 +15,8 @@ kataloggia_app_dir_1 = os.path.join(current_dir, 'kataloggia-main', 'app')
 # Path 2: kataloggia-main/kataloggia-main/app (for local)
 kataloggia_app_dir_2 = os.path.join(current_dir, 'kataloggia-main', 'kataloggia-main', 'app')
 
+# Determine which path exists
+kataloggia_dir = None
 if os.path.exists(kataloggia_app_dir_1):
     # Render.com structure
     kataloggia_dir = os.path.join(current_dir, 'kataloggia-main')
@@ -30,27 +32,34 @@ elif os.path.exists(kataloggia_app_dir_2):
     parent_dir = os.path.dirname(kataloggia_dir)
     sys.path.insert(0, parent_dir)
     print(f"[INFO] Using local structure: {kataloggia_dir}")
+else:
+    # Try to find kataloggia-main directory
+    for root, dirs, files in os.walk(current_dir):
+        if 'kataloggia-main' in dirs:
+            kataloggia_dir = os.path.join(root, 'kataloggia-main')
+            if os.path.exists(os.path.join(kataloggia_dir, 'app')):
+                sys.path.insert(0, kataloggia_dir)
+                sys.path.insert(0, current_dir)
+                print(f"[INFO] Found kataloggia-main at: {kataloggia_dir}")
+                break
+
+if not kataloggia_dir or not os.path.exists(os.path.join(kataloggia_dir, 'app')):
+    raise ImportError(f"App package not found. Searched in: {current_dir}")
 
 try:
     # Remove app.py from sys.modules to avoid circular import
-    if 'app' in sys.modules and sys.modules['app'].__file__ == __file__:
-        del sys.modules['app']
+    modules_to_remove = [k for k in list(sys.modules.keys()) if k == 'app' and sys.modules[k].__file__ == __file__]
+    for mod in modules_to_remove:
+        del sys.modules[mod]
     
     # Import app package (not app.py file)
-    if os.path.exists(kataloggia_app_dir_1):
-        # Render.com structure
-        from app import create_app
-    elif os.path.exists(kataloggia_app_dir_2):
-        # Local structure - need to import from nested path
-        import importlib
-        import importlib.util
-        app_init_path = os.path.join(kataloggia_dir, 'app', '__init__.py')
-        spec = importlib.util.spec_from_file_location("app_package_init", app_init_path)
-        app_init_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(app_init_module)
-        create_app = app_init_module.create_app
-    else:
-        raise ImportError("App package not found in any expected location")
+    # Change to kataloggia-main directory temporarily to ensure proper imports
+    original_cwd = os.getcwd()
+    try:
+        os.chdir(kataloggia_dir)
+        from app import create_app, get_socketio
+    finally:
+        os.chdir(original_cwd)
     
     # Import models for database initialization
     try:
