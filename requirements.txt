@@ -9,3 +9,9 @@ aiohttp==3.8.5
 Pillow==10.1.0
 flask-wtf==1.2.1
 PyJWT==2.8.0
+gunicorn==21.2.0
+playwright==1.40.0
+flask-socketio==5.3.6
+python-socketio==5.10.0
+eventlet==0.33.3
+SQLAlchemy==2.0.23
